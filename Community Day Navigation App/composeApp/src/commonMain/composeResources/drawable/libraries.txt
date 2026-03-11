@@ -1,0 +1,32 @@
+Core Frameworks and libraries:
+1. Core Frameworks
+Compose Multiplatform: The primary UI framework for sharing your layouts across all three platforms.
+Kotlin Coroutines: For managing background tasks like fetching data without freezing the UI.
+Medium
+Medium
+ +1
+2. Networking & Data
+Ktor Client: A multiplatform HTTP client used to fetch event details and booth locations from your server or Firebase.
+kotlinx.serialization: Converts the JSON data from your server into Kotlin objects automatically.
+KStore or MultiplatformSettings: Used to save the "Event Code" locally so users don't have to re-type it.
+Reddit
+Reddit
+ +1
+3. Local Database (Offline Support)
+Room (KMP): Google's official database library now supports KMP, allowing you to cache booth descriptions for offline use.
+SQLDelight: A popular alternative that generates type-safe Kotlin APIs from your SQL statements.
+4. Navigation & Architecture
+Navigation Compose (Multiplatform): The standard Android navigation library, now with official support for iOS and Web.
+Koin: A lightweight dependency injection framework to manage your database and network clients across the app.
+Kotlin Programming Language
+Kotlin Programming Language
+ +2
+5. Specialized Features (Maps & QR)
+KMP Maps (by Software Mansion): A wrapper that uses native Google Maps on Android/iOS and provides web-compatible mapping.
+QRKit or EasyQRScan: Libraries for scanning QR codes on Android and iOS using the device camera.
+QRCode-Kotlin: Used if you need to generate and display a QR code for a specific booth on the screen.
+Reddit
+Reddit
+ +3
+6. Image Loading
+Coil3: The go-to library for loading organization logos and event banners from a URL.
