@@ -82,7 +82,7 @@ fun EventDetailScreen(
                             fontWeight = FontWeight.Bold
                         )
                         Spacer(modifier = Modifier.height(8.dp))
-                        CategoryBadge(event.category, Turquoise, ActionOrange)
+                        CategoryBadge(event.category, NavyBlue, Silver, Turquoise, ActionOrange)
                     }
                 }
             }
@@ -370,18 +370,20 @@ private fun RegistrationCard(
 @Composable
 private fun CategoryBadge(
     category: EventCategory,
+    NavyBlue: Color,
+    Silver: Color,
     Turquoise: Color,
     ActionOrange: Color
 ) {
     val (backgroundColor, textColor) = when (category) {
         EventCategory.KEYNOTE -> ActionOrange to Color.White
-        EventCategory.WORKSHOP -> Turquoise to Color(0xFF000033)
+        EventCategory.WORKSHOP -> Turquoise to NavyBlue
         EventCategory.TALK -> Color(0xFF9C27B0) to Color.White
         EventCategory.NETWORKING -> Color(0xFF4CAF50) to Color.White
         EventCategory.MEAL -> Color(0xFFFF9800) to Color.White
         EventCategory.REGISTRATION -> Color(0xFF607D8B) to Color.White
         EventCategory.SOCIAL -> Color(0xFFE91E63) to Color.White
-        EventCategory.OTHER -> Silver to Color(0xFF000033)
+        EventCategory.OTHER -> Silver to NavyBlue
     }
     
     Box(

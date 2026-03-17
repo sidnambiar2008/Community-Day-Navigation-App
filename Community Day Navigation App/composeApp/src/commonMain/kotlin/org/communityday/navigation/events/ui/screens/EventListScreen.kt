@@ -109,6 +109,8 @@ private fun EventCard(
                 
                 CategoryBadge(
                     category = event.category,
+                    NavyBlue = NavyBlue,
+                    Silver = Silver,
                     Turquoise = Turquoise,
                     ActionOrange = ActionOrange
                 )
@@ -188,6 +190,8 @@ private fun EventCard(
 @Composable
 private fun CategoryBadge(
     category: EventCategory,
+    NavyBlue: Color,
+    Silver: Color,
     Turquoise: Color,
     ActionOrange: Color
 ) {
