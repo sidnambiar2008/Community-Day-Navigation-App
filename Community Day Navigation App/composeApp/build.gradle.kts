@@ -46,6 +46,7 @@ kotlin {
         androidMain.dependencies {
             implementation(libs.compose.uiToolingPreview)
             implementation(libs.androidx.activity.compose)
+            implementation(platform(libs.firebase.bom.platform))
             implementation(libs.firebase.analytics)
             implementation(libs.firebase.firestore)
             implementation(libs.firebase.auth)
