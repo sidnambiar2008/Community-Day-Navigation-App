@@ -87,3 +87,14 @@ kotlin {
         }
     }
 }
+
+android {
+    namespace = "org.communityday.navigation.events"  // Your actual package
+    compileSdk = 35 
+
+    defaultConfig {
+        applicationId = "org.communityday.navigation.events"
+        minSdk = 24
+        targetSdk = 35
+    }
+}
