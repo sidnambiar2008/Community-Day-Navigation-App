@@ -12,7 +12,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import org.jetbrains.compose.resources.painterResource
@@ -30,7 +29,6 @@ sealed class Screen {
 }
 
 @Composable
-@Preview
 fun App() {
     val NavyBlue = androidx.compose.ui.graphics.Color(0xFF000033)
     val Silver = androidx.compose.ui.graphics.Color(0xFFC0C0C0)
