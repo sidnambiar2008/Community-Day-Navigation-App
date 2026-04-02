@@ -100,12 +100,12 @@ fun WelcomeScreen(
         // Title
         AnimatedVisibility(showContent) {
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                Text(
-                    text = "Community Day",
-                    color = Silver,
-                    fontSize = 32.sp,
-                    fontWeight = androidx.compose.ui.text.font.FontWeight.Bold
-                )
+               // Text(
+                 //   text = "Community Day",
+                 //   color = Silver,
+                 //   fontSize = 32.sp,
+                 //   fontWeight = androidx.compose.ui.text.font.FontWeight.Bold
+               // )
                 Text(
                     text = "Navigation App",
                     color = Turquoise,
