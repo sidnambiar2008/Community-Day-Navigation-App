@@ -17,11 +17,12 @@ kotlin {
         compilerOptions {
             jvmTarget.set(JvmTarget.JVM_11)
         }
-        
-        compilations.all {
-            kotlinOptions {
-                freeCompilerArgs += "-Xopt-in=kotlin.RequiresOptIn"
-            }
+    }
+
+    // Apply language settings to all source sets
+    sourceSets.all {
+        languageSettings {
+            optIn("kotlin.RequiresOptIn")
         }
     }
 
@@ -48,13 +49,8 @@ kotlin {
         binaries.executable()
     }
 
-    @OptIn(ExperimentalWasmDsl::class)
-    wasmJs {
-        browser()
-        binaries.executable()
-    }
-
     sourceSets {
+        
         androidMain.dependencies {
             implementation(libs.compose.uiToolingPreview)
             implementation(libs.androidx.activity.compose)
@@ -78,6 +74,11 @@ kotlin {
             implementation(libs.ktor.client.content.negotiation)
             implementation(libs.ktor.serialization.kotlinx.json)
             implementation(libs.ktor.client.logging)
+            // Firebase Kotlin SDK (GitLive) - works for Android, iOS, and Web (js())
+            implementation("dev.gitlive:firebase-app:2.4.0")
+            implementation("dev.gitlive:firebase-auth:2.4.0")
+            implementation("dev.gitlive:firebase-firestore:2.4.0")
+            implementation("dev.gitlive:firebase-analytics:2.4.0")
         }
         commonTest.dependencies {
             implementation(libs.kotlin.test)
