@@ -27,6 +27,7 @@ import communitydaynavigationapp.composeapp.generated.resources.ic_map
 import communitydaynavigationapp.composeapp.generated.resources.ic_meeting_room
 import communitydaynavigationapp.composeapp.generated.resources.ic_person
 import communitydaynavigationapp.composeapp.generated.resources.ic_schedule
+import kotlinx.coroutines.flow.catch
 import org.communityday.navigation.events.data.EventRepository
 
 
@@ -50,31 +51,21 @@ fun EventListScreen(
     val repository = remember { EventRepository() }
 
     // Load events on composition
+    // Replace both existing LaunchedEffects with this:
     LaunchedEffect(Unit) {
-        // 2. CLEANUP: No need for coroutineScope.launch here, LaunchedEffect is already a scope
         isLoading = true
         errorMessage = null
 
-        repository.getAllEvents()
-            .onSuccess { loadedEvents ->
-                // 3. IMPROVEMENT: If Firebase is empty, use Mock data automatically
-                events = if (loadedEvents.isEmpty()) repository.getMockEvents() else loadedEvents
-                isLoading = false
-            }
-            .onFailure { error ->
-                errorMessage = "Failed to load events: ${error.message}"
+        repository.getEventsStream()
+            .catch { error ->
+                errorMessage = "Stream Error: ${error.message}"
                 events = repository.getMockEvents()
                 isLoading = false
             }
-    }
-
-    // 4. FIXED: Listen for real-time updates correctly
-    LaunchedEffect(Unit) {
-        repository.getEventsStream().collect { updatedEvents ->
-            if (updatedEvents.isNotEmpty()) {
+            .collect { updatedEvents ->
                 events = updatedEvents
+                isLoading = false // Data has arrived, stop the spinner!
             }
-        }
     }
     
     Column(
