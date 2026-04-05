@@ -6,9 +6,6 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.LocationOn
-import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -19,10 +16,19 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import kotlinx.coroutines.launch
 import org.communityday.navigation.events.data.Event
 import org.communityday.navigation.events.data.EventCategory
-import org.communityday.navigation.events.di.ServiceLocator
+import org.jetbrains.compose.resources.vectorResource
+import communitydaynavigationapp.composeapp.generated.resources.Res
+import communitydaynavigationapp.composeapp.generated.resources.ic_back_arrow
+import communitydaynavigationapp.composeapp.generated.resources.ic_howtoreg
+import communitydaynavigationapp.composeapp.generated.resources.ic_location_on
+import communitydaynavigationapp.composeapp.generated.resources.ic_map
+import communitydaynavigationapp.composeapp.generated.resources.ic_meeting_room
+import communitydaynavigationapp.composeapp.generated.resources.ic_person
+import communitydaynavigationapp.composeapp.generated.resources.ic_schedule
+import org.communityday.navigation.events.data.EventRepository
+
 
 @Composable
 fun EventListScreen(
@@ -33,38 +39,41 @@ fun EventListScreen(
     val Silver = Color(0xFFC0C0C0)
     val ActionOrange = Color(0xFFFF8C00)
     val Turquoise = Color(0xFF40E0D0)
-    
+
     var events by remember { mutableStateOf<List<Event>>(emptyList()) }
     var isLoading by remember { mutableStateOf(true) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
-    
+
     val coroutineScope = rememberCoroutineScope()
-    val repository = ServiceLocator.eventRepository
-    
+
+    // 1. FIXED: Initialize the repository directly since ServiceLocator is gone
+    val repository = remember { EventRepository() }
+
     // Load events on composition
     LaunchedEffect(Unit) {
-        coroutineScope.launch {
-            isLoading = true
-            errorMessage = null
-            
-            repository.getAllEvents()
-                .onSuccess { loadedEvents ->
-                    events = loadedEvents
-                    isLoading = false
-                }
-                .onFailure { error ->
-                    errorMessage = "Failed to load events: ${error.message}"
-                    // Fallback to mock data for development
-                    events = repository.getMockEvents()
-                    isLoading = false
-                }
-        }
+        // 2. CLEANUP: No need for coroutineScope.launch here, LaunchedEffect is already a scope
+        isLoading = true
+        errorMessage = null
+
+        repository.getAllEvents()
+            .onSuccess { loadedEvents ->
+                // 3. IMPROVEMENT: If Firebase is empty, use Mock data automatically
+                events = if (loadedEvents.isEmpty()) repository.getMockEvents() else loadedEvents
+                isLoading = false
+            }
+            .onFailure { error ->
+                errorMessage = "Failed to load events: ${error.message}"
+                events = repository.getMockEvents()
+                isLoading = false
+            }
     }
-    
-    // Listen for real-time updates
+
+    // 4. FIXED: Listen for real-time updates correctly
     LaunchedEffect(Unit) {
         repository.getEventsStream().collect { updatedEvents ->
-            events = updatedEvents
+            if (updatedEvents.isNotEmpty()) {
+                events = updatedEvents
+            }
         }
     }
     
@@ -216,7 +225,7 @@ private fun EventCard(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Icon(
-                        imageVector = Icons.Default.Schedule,
+                        imageVector = vectorResource(Res.drawable.ic_schedule),
                         contentDescription = "Time",
                         tint = Turquoise,
                         modifier = Modifier.size(16.dp)
@@ -233,7 +242,7 @@ private fun EventCard(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Icon(
-                        imageVector = Icons.Default.LocationOn,
+                        imageVector = vectorResource(Res.drawable.ic_location_on),
                         contentDescription = "Location",
                         tint = ActionOrange,
                         modifier = Modifier.size(16.dp)

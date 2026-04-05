@@ -5,29 +5,53 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Community Day App</title>
 
+    <style>
+        /* This ensures your Compose app fills the whole browser window */
+        html, body {
+            width: 100%;
+            height: 100%;
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+        }
+        #ComposeTarget {
+            width: 100%;
+            height: 100%;
+            outline: none;
+        }
+    </style>
+
+    <script>
+        // 1. Shield against Node.js detection & Skia "Global" requirement
+        window.global = window;
+        window.process = { env: { NODE_ENV: 'production' } };
+    </script>
+
+    <script src="skiko.js"></script>
+
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getAuth } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
         import { getFirestore } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-        // 2. YOUR CONFIG (Get this from Firebase Console)
-       const firebaseConfig = {
-          apiKey: "AIzaSyAXAHUpJpvpxTgZ9xpM1wxKHR2bidG0GdA",
-          authDomain: "community-day-navigation-15748.firebaseapp.com",
-          projectId: "community-day-navigation-15748",
-          storageBucket: "community-day-navigation-15748.firebasestorage.app",
-          messagingSenderId: "512193332305",
-          appId: "1:512193332305:web:890e7d8a84c3886d4ea470",
-          measurementId: "G-SWD092HQYC"
-        };
+      const firebaseConfig = {
+        apiKey: "AIzaSyAXAHUpJpvpxTgZ9xpM1wxKHR2bidG0GdA",
+        authDomain: "community-day-navigation-15748.firebaseapp.com",
+        projectId: "community-day-navigation-15748",
+        storageBucket: "community-day-navigation-15748.firebasestorage.app",
+        messagingSenderId: "512193332305",
+        appId: "1:512193332305:web:890e7d8a84c3886d4ea470",
+        measurementId: "G-SWD092HQYC"
+      };
+      const app = initializeApp(firebaseConfig);
+      window.firebaseApp = app;
 
-        // 3. This makes Firebase "globally" available to your Kotlin code
-        window.firebaseApp = initializeApp(firebaseConfig);
     </script>
 </head>
 <body>
-<div id="root"></div>
+<canvas id="ComposeTarget"></canvas>
 
 <script src="composeApp.js"></script>
 </body>
 </html>
+

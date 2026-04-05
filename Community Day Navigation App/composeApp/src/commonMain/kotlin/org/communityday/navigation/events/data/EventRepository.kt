@@ -1,31 +1,68 @@
 package org.communityday.navigation.events.data
 
+import dev.gitlive.firebase.Firebase
+import dev.gitlive.firebase.firestore.firestore
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.catch
 
-class EventRepository(private val eventService: EventService) {
-    
+class EventRepository {
+    // This connects to the '(default)' database we just set up
+    private val firestore = Firebase.firestore
+    // NEW (Matches your new structure):
+    private val eventsCollection = firestore
+        .collection("conferences")
+        .document("communityday2026")
+        .collection("events")
+
+    /**
+     * Fetches all events once (used for the initial screen load)
+     */
     suspend fun getAllEvents(): Result<List<Event>> {
-        return eventService.getAllEvents()
+        return try {
+            val snapshot = eventsCollection.get()
+            // .data<Event>() automatically matches Firestore fields to your Kotlin class!
+            val events = snapshot.documents.map { doc ->
+                doc.data<Event>().copy(id = doc.id) // This injects the Firestore ID into your class
+            }
+            Result.success(events)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
     }
-    
-    suspend fun getEventById(id: String): Result<Event?> {
-        return eventService.getEventById(id)
-    }
-    
-    suspend fun getEventsByCategory(category: EventCategory): Result<List<Event>> {
-        return eventService.getEventsByCategory(category)
-    }
-    
+
+    /**
+     * The "Real-time" Stream: Updates the UI automatically when you change
+     * something in the Firebase Console.
+     */
     fun getEventsStream(): Flow<List<Event>> {
-        return eventService.getEventsStream()
+        return eventsCollection.snapshots.map { snapshot ->
+            snapshot.documents.map { doc ->
+                doc.data<Event>().copy(id = doc.id) // Same here!
+            }
+        }.catch { e ->
+            println("Firestore Stream Error: ${e.message}")
+            emit(emptyList())
+        }
     }
-    
-    suspend fun registerForEvent(eventId: String, userId: String): Result<Boolean> {
-        return eventService.registerForEvent(eventId, userId)
-    }
-    
-    // Fallback to mock data for development/testing
-    suspend fun getMockEvents(): List<Event> {
-        return MockEvents.getAllEvents()
+
+    /**
+     * Your safety net: If Firebase is empty or offline, we show these.
+     */
+    fun getMockEvents(): List<Event> {
+        return listOf(
+            Event(
+                id = "mock_1",
+                title = "Offline: Check Connection",
+                description = "We couldn't reach the cloud. Showing local data.",
+                category = EventCategory.OTHER,
+                location = "Unknown",
+                startTime = "--:--",
+                endTime = "--:--",
+                latitude = 0.0,
+                longitude = 0.0
+
+            )
+        )
     }
 }

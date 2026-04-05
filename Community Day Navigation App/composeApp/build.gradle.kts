@@ -2,6 +2,8 @@ import org.jetbrains.compose.desktop.application.dsl.TargetFormat
 import org.jetbrains.kotlin.gradle.ExperimentalWasmDsl
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
+
+
 plugins {
     alias(libs.plugins.kotlinMultiplatform)
     alias(libs.plugins.androidApplication)
@@ -9,7 +11,7 @@ plugins {
     alias(libs.plugins.composeCompiler)
     alias(libs.plugins.composeHotReload)
     alias(libs.plugins.kotlinSerialization)
-    alias(libs.plugins.googleServices)
+    // Google Services plugin applied conditionally at bottom
 }
 
 kotlin {
@@ -18,7 +20,7 @@ kotlin {
     
     androidTarget {
         compilerOptions {
-            jvmTarget.set(JvmTarget.JVM_11)
+            jvmTarget.set(JvmTarget.JVM_17)
         }
     }
 
@@ -36,37 +38,40 @@ kotlin {
 
     jvm() {
         compilerOptions {
-            jvmTarget.set(JvmTarget.JVM_11)
+            jvmTarget.set(JvmTarget.JVM_17)
         }
     }
 
     js(IR) {
-        browser()
+        moduleName = "composeApp"
+        browser {
+            commonWebpackConfig {
+                outputFileName = "composeApp.js"
+            }
+        }
         binaries.executable()
     }
-
     sourceSets {
         // Use "val ... by getting" for ALL of them to stay safe
         val commonMain by getting {
             dependencies {
+                // Compose & Lifecycle (Clean and readable!)
                 implementation(libs.compose.runtime)
                 implementation(libs.compose.foundation)
                 implementation(libs.compose.material3)
+                implementation(libs.compose.material)
                 implementation(libs.compose.ui)
                 implementation(libs.compose.components.resources)
                 implementation(libs.androidx.lifecycle.viewmodelCompose)
                 implementation(libs.androidx.lifecycle.runtimeCompose)
-                implementation(compose.materialIconsExtended)
-                implementation(libs.ktor.client.core)
-                implementation(libs.ktor.client.content.negotiation)
-                implementation(libs.ktor.serialization.kotlinx.json)
-                implementation(libs.ktor.client.logging)
                 
-                // GitLive Firebase (Cross-platform versions)
-                implementation("dev.gitlive:firebase-app:2.1.0")
-                implementation("dev.gitlive:firebase-auth:2.1.0")
-                implementation("dev.gitlive:firebase-firestore:2.1.0")
-                implementation("dev.gitlive:firebase-analytics:2.1.0")
+
+
+                
+                // Firebase (The new Multiplatform way)
+                implementation(libs.firebase.app)
+                implementation(libs.firebase.auth)
+                implementation(libs.firebase.firestore)
             }
         }
 
@@ -74,7 +79,6 @@ kotlin {
             dependencies {
                 implementation(libs.compose.uiToolingPreview)
                 implementation(libs.androidx.activity.compose)
-                implementation(libs.ktor.client.android)
             }
         }
 
@@ -86,17 +90,21 @@ kotlin {
 
         val iosMain by getting {
             dependencies {
-                implementation(libs.ktor.client.ios)
+
+
             }
         }
 
         val jvmMain by getting {
-            // Can leave empty, but keep for structure
+            dependencies{
+                implementation(compose.desktop.currentOs)
+                implementation(libs.kotlinx.coroutinesSwing)
+            }
         }
 
         val jsMain by getting {
             dependencies {
-                implementation(libs.ktor.client.js)
+                implementation(compose.ui) // This pulls in the Skiko JS dependency
                 // Add these npm dependencies to provide the polyfills
                 implementation(npm("browserify-zlib", "0.2.0"))
                 implementation(npm("stream-browserify", "3.0.0"))
@@ -117,4 +125,26 @@ android {
         minSdk = 24
         targetSdk = 35
     }
+
+    // ADD THIS BLOCK BELOW
+    compileOptions {
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
+    }
+}
+
+compose.desktop {
+    application {
+        mainClass = "MainKt" // This must match the file where your fun main() is
+
+        nativeDistributions {
+            targetFormats(TargetFormat.Dmg, TargetFormat.Msi, TargetFormat.Deb)
+            packageVersion = "1.0.0"
+        }
+    }
+}
+
+// Apply Google Services plugin only for Android builds
+if (project.plugins.hasPlugin("com.android.application")) {
+    apply(plugin = "com.google.gms.google-services")
 }

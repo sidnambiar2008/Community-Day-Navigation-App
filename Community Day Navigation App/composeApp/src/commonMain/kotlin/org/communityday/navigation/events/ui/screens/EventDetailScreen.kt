@@ -5,8 +5,6 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -18,6 +16,15 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import org.communityday.navigation.events.data.Event
 import org.communityday.navigation.events.data.EventCategory
+import org.jetbrains.compose.resources.vectorResource
+import communitydaynavigationapp.composeapp.generated.resources.Res
+import communitydaynavigationapp.composeapp.generated.resources.ic_back_arrow
+import communitydaynavigationapp.composeapp.generated.resources.ic_howtoreg
+import communitydaynavigationapp.composeapp.generated.resources.ic_location_on
+import communitydaynavigationapp.composeapp.generated.resources.ic_map
+import communitydaynavigationapp.composeapp.generated.resources.ic_meeting_room
+import communitydaynavigationapp.composeapp.generated.resources.ic_person
+import communitydaynavigationapp.composeapp.generated.resources.ic_schedule
 
 @Composable
 fun EventDetailScreen(
@@ -29,7 +36,7 @@ fun EventDetailScreen(
     val Silver = Color(0xFFC0C0C0)
     val ActionOrange = Color(0xFFFF8C00)
     val Turquoise = Color(0xFF40E0D0)
-    
+
     Column(
         modifier = modifier
             .fillMaxSize()
@@ -43,7 +50,7 @@ fun EventDetailScreen(
         ) {
             IconButton(onClick = onBackClick) {
                 Icon(
-                    imageVector = Icons.Default.ArrowBack,
+                    imageVector = vectorResource(Res.drawable.ic_back_arrow),
                     contentDescription = "Back",
                     tint = Silver
                 )
@@ -163,8 +170,8 @@ fun EventDetailScreen(
                         containerColor = ActionOrange
                     )
                 ) {
-                    Icon(
-                        imageVector = Icons.Default.Map,
+                   Icon(
+                        imageVector = vectorResource(Res.drawable.ic_map),
                         contentDescription = null,
                         modifier = Modifier.size(20.dp)
                     )
@@ -206,9 +213,9 @@ private fun EventDetailsGrid(
                 modifier = Modifier.padding(bottom = 12.dp)
             )
             
-            // Time
+            //Time
             DetailRow(
-                icon = Icons.Default.Schedule,
+                icon = vectorResource(Res.drawable.ic_schedule),
                 label = "Time",
                 value = "${event.startTime} - ${event.endTime}",
                 iconColor = Turquoise,
@@ -217,20 +224,21 @@ private fun EventDetailsGrid(
             
             Spacer(modifier = Modifier.height(12.dp))
             
-            // Location
+             //Location
             DetailRow(
-                icon = Icons.Default.LocationOn,
+                icon = vectorResource(Res.drawable.ic_location_on),
                 label = "Location",
                 value = event.location,
                 iconColor = ActionOrange,
                 textColor = Silver
             )
+
             
-            // Room if available
+             //Room if available
             event.room?.let { room ->
                 Spacer(modifier = Modifier.height(12.dp))
                 DetailRow(
-                    icon = Icons.Default.MeetingRoom,
+                    icon = vectorResource(Res.drawable.ic_meeting_room),
                     label = "Room",
                     value = room,
                     iconColor = Silver,
@@ -239,16 +247,19 @@ private fun EventDetailsGrid(
             }
             
             // Speaker if available
+
             event.speaker?.let { speaker ->
                 Spacer(modifier = Modifier.height(12.dp))
                 DetailRow(
-                    icon = Icons.Default.Person,
+                    icon = vectorResource(Res.drawable.ic_person),
                     label = "Speaker",
                     value = speaker,
                     iconColor = Turquoise,
                     textColor = Silver
                 )
             }
+
+
         }
     }
 }
@@ -354,15 +365,17 @@ private fun RegistrationCard(
                     fontSize = 12.sp
                 )
             }
-            
+
             if (!isFull) {
                 Icon(
-                    imageVector = Icons.Default.HowToReg,
+                    imageVector = vectorResource(Res.drawable.ic_howtoreg),
                     contentDescription = "Registration Open",
                     tint = ActionOrange,
                     modifier = Modifier.size(24.dp)
                 )
             }
+
+
         }
     }
 }

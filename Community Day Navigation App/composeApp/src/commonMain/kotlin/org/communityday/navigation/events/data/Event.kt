@@ -4,15 +4,15 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class Event(
-    val id: String,
-    val title: String,
-    val description: String,
-    val location: String,
-    val latitude: Double,
-    val longitude: Double,
-    val startTime: String,
-    val endTime: String,
-    val category: EventCategory,
+    val id: String = "", // Default to empty, Repository will overwrite this with doc.id
+    val title: String = "",
+    val description: String = "",
+    val location: String = "",
+    val latitude: Double = 0.0,
+    val longitude: Double = 0.0,
+    val startTime: String = "",
+    val endTime: String = "",
+    val category: EventCategory = EventCategory.OTHER, // Safe fallback
     val room: String? = null,
     val speaker: String? = null,
     val capacity: Int? = null,
