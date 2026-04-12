@@ -46,36 +46,36 @@ fun BottomNavigationBar(
 ) {
     androidx.compose.material3.NavigationBar {
         // Tab 1: Events
-        androidx.compose.material3.NavigationBarItem(
-            selected = currentScreen is Screen.EventList,
-            onClick = { onTabSelected(Screen.EventList) },
-            label = { Text("Events") },
-            icon = { androidx.compose.material3.Icon(androidx.compose.material.icons.Icons.Default.DateRange, contentDescription = null) }
-        )
+      //  androidx.compose.material3.NavigationBarItem(
+       //     selected = currentScreen is Screen.EventList,
+        //    onClick = { onTabSelected(Screen.EventList) },
+        //    label = { Text("Events") },
+        //    icon = { androidx.compose.material3.Icon(androidx.compose.material.icons.Icons.Default.DateRange, contentDescription = null) }
+        //)
 
         // Tab 2: Booths
-        androidx.compose.material3.NavigationBarItem(
-            selected = currentScreen is Screen.BoothList,
-            onClick = { onTabSelected(Screen.BoothList) },
-            label = { Text("Booths") },
-            icon = { androidx.compose.material3.Icon(androidx.compose.material.icons.Icons.Default.List, contentDescription = null) }
-        )
+       // androidx.compose.material3.NavigationBarItem(
+        //    selected = currentScreen is Screen.BoothList,
+        //    onClick = { onTabSelected(Screen.BoothList) },
+        //    label = { Text("Booths") },
+        //    icon = { androidx.compose.material3.Icon(androidx.compose.material.icons.Icons.Default.List, contentDescription = null) }
+        //)
 
         // Tab 3: Map
-        androidx.compose.material3.NavigationBarItem(
-            selected = currentScreen is Screen.Map,
-            onClick = { onTabSelected(Screen.Map) },
-            label = { Text("Map") },
-            icon = { androidx.compose.material3.Icon(androidx.compose.material.icons.Icons.Default.LocationOn, contentDescription = null) }
-        )
+        //androidx.compose.material3.NavigationBarItem(
+         //   selected = currentScreen is Screen.Map,
+         //   onClick = { onTabSelected(Screen.Map) },
+         //   label = { Text("Map") },
+         //   icon = { androidx.compose.material3.Icon(androidx.compose.material.icons.Icons.Default.LocationOn, contentDescription = null) }
+        //)
 
         // Tab 4: Profile
-        androidx.compose.material3.NavigationBarItem(
-            selected = currentScreen is Screen.Profile,
-            onClick = { onTabSelected(Screen.Profile) },
-            label = { Text("Profile") },
-            icon = { androidx.compose.material3.Icon(androidx.compose.material.icons.Icons.Default.AccountCircle, contentDescription = null) }
-        )
+        //androidx.compose.material3.NavigationBarItem(
+         //   selected = currentScreen is Screen.Profile,
+         //   onClick = { onTabSelected(Screen.Profile) },
+         //   label = { Text("Profile") },
+          //  icon = { androidx.compose.material3.Icon(androidx.compose.material.icons.Icons.Default.AccountCircle, contentDescription = null) }
+      //  )
     }
 }
 
