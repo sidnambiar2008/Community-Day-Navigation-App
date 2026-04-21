@@ -22,7 +22,8 @@ fun WelcomeScreenPreview() {
         NavyBlue = androidx.compose.ui.graphics.Color(0xFF000033),
         Silver = androidx.compose.ui.graphics.Color(0xFFC0C0C0),
         ActionOrange = androidx.compose.ui.graphics.Color(0xFFFF8C00),
-        Turquoise = androidx.compose.ui.graphics.Color(0xFF40E0D0)
+        Turquoise = androidx.compose.ui.graphics.Color(0xFF40E0D0),
+        onAdminLogin = {}
     )
 }
 

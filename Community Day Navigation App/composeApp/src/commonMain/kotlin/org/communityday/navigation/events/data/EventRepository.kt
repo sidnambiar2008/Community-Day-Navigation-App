@@ -10,6 +10,7 @@ import dev.gitlive.firebase.firestore.DocumentReference
 import dev.gitlive.firebase.firestore.Transaction
 import kotlinx.coroutines.flow.flowOf
 import dev.gitlive.firebase.firestore.where
+import org.communityday.navigation.events.utils.convertTimeToMinutes
 
 
 class EventRepository {
@@ -48,15 +49,18 @@ class EventRepository {
      * Real-time Stream for a specific conference
      */
     fun getEventsStream(confId: String): Flow<List<Event>> {
-        // We add .orderBy here to tell Firestore how to send the data
         return getEventCollection(confId)
-            .orderBy("startTime") // 👈 This keeps your schedule in order
             .snapshots
             .map { snapshot ->
-                snapshot.documents.map { doc ->
-                    doc.data<Event>().copy(id = doc.id)
-                }
-            }.catch { e ->
+                snapshot.documents
+                    .map { doc ->
+                        doc.data<Event>().copy(id = doc.id)
+                    }
+                    .sortedBy { event ->
+                        convertTimeToMinutes(event.startTime)
+                    }
+            }
+            .catch { e ->
                 println("Firestore Stream Error for $confId: ${e.message}")
                 emit(emptyList())
             }
@@ -235,3 +239,4 @@ class EventRepository {
         )
     }
 }
+

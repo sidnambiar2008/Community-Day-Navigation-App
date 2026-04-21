@@ -11,18 +11,23 @@ import kotlinx.coroutines.launch
 import org.communityday.navigation.events.data.EventRepository
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
-import androidx.compose.foundation.lazy.items // 👈 This is the one you need
+import androidx.compose.foundation.lazy.items //
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
 import communitydaynavigationapp.composeapp.generated.resources.Res
 import communitydaynavigationapp.composeapp.generated.resources.ic_schedule
 import org.jetbrains.compose.resources.vectorResource
 import communitydaynavigationapp.composeapp.generated.resources.ic_delete
+import org.communityday.navigation.events.utils.convertTimeToMinutes
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
 
 @Composable
 fun AdminDashboardScreen(
     confId: String,
     repository: EventRepository,
-    onBack: () -> Unit
+    onBack: () -> Unit,
+    Turquoise: Color
 ) {
     // State for tracking which item we are editing
     var editingEvent by remember { mutableStateOf<org.communityday.navigation.events.data.Event?>(null) }
@@ -44,9 +49,36 @@ fun AdminDashboardScreen(
             ) {
                 // 1. HEADER & BUTTONS
                 item {
-                    Text("Managing: $confId", style = MaterialTheme.typography.headlineSmall)
-                    // ... (Your Buttons stay here)
-                    HorizontalDivider(modifier = Modifier.padding(vertical = 16.dp))
+                    Text("Edit Conference: $confId", style = MaterialTheme.typography.headlineSmall)
+                    // The Buttons
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        // BUTTON TO ADD EVENT
+                        Button(
+                            onClick = {
+                                editingEvent = null // Ensure it's fresh, not an edit
+                                showEventDialog = true
+                            },
+                            modifier = Modifier.weight(1f),
+                            colors = ButtonDefaults.buttonColors(containerColor = Turquoise)
+                        ) {
+                            Text("Add Event", color = Color.Black)
+                        }
+
+                        // BUTTON TO ADD BOOTH
+                        Button(
+                            onClick = {
+                                editingBooth = null
+                                showBoothDialog = true
+                            },
+                            modifier = Modifier.weight(1f),
+                            colors = ButtonDefaults.buttonColors(containerColor = Turquoise)
+                        ) {
+                            Text("Add Booth", color = Color.Black)
+                        }
+                    }
                 }
 
                 // 2. EVENTS SECTION
@@ -89,9 +121,6 @@ fun AdminDashboardScreen(
                 }
             }
 
-
-
-
         // Dialogs
         if (showEventDialog) {
             AddEventDialog(
@@ -116,10 +145,11 @@ fun AdminDashboardScreen(
 }
 
 @Composable
+@OptIn(ExperimentalMaterial3Api::class)
 fun AddEventDialog(
     confId: String,
     repository: EventRepository,
-    initialEvent: org.communityday.navigation.events.data.Event? = null, // 👈 Added this
+    initialEvent: org.communityday.navigation.events.data.Event? = null, // A Null Event
     onDismiss: () -> Unit,
     onSuccess: () -> Unit
 ) {
@@ -133,6 +163,15 @@ fun AddEventDialog(
 
     val scope = rememberCoroutineScope()
     var isSaving by remember { mutableStateOf(false) }
+    // ... title and description states ...
+
+    // States for controlling the pickers
+    var showStartPicker by remember { mutableStateOf(false) }
+    var showEndPicker by remember { mutableStateOf(false) }
+
+    val startTimeState = rememberTimePickerState(is24Hour = false)
+    val endTimeState = rememberTimePickerState(is24Hour = false)
+    var errorMessage by remember { mutableStateOf<String?>(null) }
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -145,21 +184,58 @@ fun AddEventDialog(
                     label = { Text("Event Title") },
                     modifier = Modifier.fillMaxWidth()
                 )
-
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    // START TIME FIELD
                     OutlinedTextField(
                         value = startTime,
-                        onValueChange = { startTime = it },
-                        label = { Text("Start (e.g. 9:00)") },
-                        modifier = Modifier.weight(1f)
+                        onValueChange = {}, // Read-only
+                        label = { Text("Start Time") },
+                        readOnly = true,
+                        modifier = Modifier.weight(1f),
+                        trailingIcon = {
+                            IconButton(onClick = { showStartPicker = true }) {
+                                Icon(vectorResource(Res.drawable.ic_schedule), contentDescription = null)
+                            }
+                        }
                     )
+                    // END TIME FIELD
                     OutlinedTextField(
                         value = endTime,
-                        onValueChange = { endTime = it },
-                        label = { Text("End (e.g. 10:30)") },
-                        modifier = Modifier.weight(1f)
+                        onValueChange = {}, // Read-only
+                        label = { Text("End Time") },
+                        readOnly = true,
+                        modifier = Modifier.weight(1f),
+                        trailingIcon = {
+                            IconButton(onClick = { showEndPicker = true }) {
+                                Icon(vectorResource(Res.drawable.ic_schedule), contentDescription = null)
+                            }
+                        }
                     )
                 }
+
+                // --- PICKER DIALOGS ---
+                if (showStartPicker) {
+                    TimeSelectionDialog(
+                        state = startTimeState,
+                        onDismiss = { showStartPicker = false },
+                        onConfirm = {
+                            startTime = formatTime(startTimeState.hour, startTimeState.minute)
+                            showStartPicker = false
+                        }
+                    )
+                }
+
+                if (showEndPicker) {
+                    TimeSelectionDialog(
+                        state = endTimeState,
+                        onDismiss = { showEndPicker = false },
+                        onConfirm = {
+                            endTime = formatTime(endTimeState.hour, endTimeState.minute)
+                            showEndPicker = false
+                        }
+                    )
+                }
+
                 Spacer(modifier = Modifier.height(4.dp))
 
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -185,12 +261,28 @@ fun AddEventDialog(
                     modifier = Modifier.fillMaxWidth(),
                     minLines = 3
                 )
+                if (errorMessage != null) {
+                    Text(
+                        text = errorMessage ?: "",
+                        color = Color.Red,
+                        style = MaterialTheme.typography.bodySmall,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.padding(vertical = 4.dp)
+                    )
+                }
             }
         },
         confirmButton = {
             Button(
                 enabled = title.isNotBlank() && latText.isNotBlank() && lonText.isNotBlank() && !isSaving,
                 onClick = {
+                    val startMin = convertTimeToMinutes(startTime)
+                    val endMin = convertTimeToMinutes(endTime)
+
+                    if (endMin <= startMin) {
+                        errorMessage = "End time must be after start time."
+                    } else {
+                        errorMessage = null
                     scope.launch {
                         isSaving = true
                         val eventData = org.communityday.navigation.events.data.Event(
@@ -208,16 +300,20 @@ fun AddEventDialog(
                         val result = if (initialEvent == null) {
                             repository.addEvent(confId, eventData)
                         } else {
-                            repository.updateEvent(confId, eventData) // 👈 Use the update function we wrote
+                            repository.updateEvent(
+                                confId,
+                                eventData
+                            ) // 👈 Use the update function we wrote
                         }
 
                         isSaving = false
-                        if (result.isSuccess) onSuccess()
+                             if (result.isSuccess) onSuccess()
+                        }
                     }
                 }
             ) {
                 if (isSaving) CircularProgressIndicator(modifier = Modifier.size(20.dp), strokeWidth = 2.dp)
-                else Text("Save")
+                    else Text("Save")
             }
         },
         dismissButton = {
@@ -352,4 +448,32 @@ fun AdminCard(
             }
         }
     }
+}
+
+private fun formatTime(hour: Int, minute: Int): String {
+    val amPm = if (hour < 12) "AM" else "PM"
+    val h = if (hour % 12 == 0) 12 else hour % 12
+    val m = minute.toString().padStart(2, '0')
+    return "$h:$m $amPm"
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun TimeSelectionDialog(
+    state: TimePickerState,
+    onDismiss: () -> Unit,
+    onConfirm: () -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        confirmButton = {
+            TextButton(onClick = onConfirm) { Text("OK") }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) { Text("Cancel") }
+        },
+        text = {
+            TimePicker(state = state)
+        }
+    )
 }

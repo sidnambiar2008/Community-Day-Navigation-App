@@ -41,6 +41,7 @@ import org.communityday.navigation.events.ui.screens.AddConferenceScreen
 import org.communityday.navigation.events.ui.screens.AdminDashboardScreen
 import org.communityday.navigation.events.ui.screens.BoothDetailScreen
 import org.communityday.navigation.events.ui.screens.BoothListScreen
+import org.communityday.navigation.events.ui.screens.JoinConferenceScreen
 import org.communityday.navigation.events.ui.screens.LoginScreen
 import org.communityday.navigation.events.ui.screens.ManageMyConferencesScreen
 import org.communityday.navigation.events.ui.screens.ProfileScreen
@@ -197,7 +198,9 @@ fun App() {
                             activeCode = code.trim()
                             isJoined = true
                             currentScreen = Screen.EventList
-                        }
+                        },
+                        onBackClick = { currentScreen = Screen.Welcome},
+                        ActionOrange = ActionOrange
                     )
 
                     is Screen.EventList -> EventListScreen(
@@ -261,7 +264,9 @@ fun App() {
                     is Screen.Login -> {
                         LoginScreen(
                             authRepo = authRepo,
-                            onLoginSuccess = { currentScreen = Screen.AddConference }
+                            onLoginSuccess = { currentScreen = Screen.AddConference },
+                            onBackClick = {currentScreen = Screen.Welcome},
+                            ActionOrange = ActionOrange
                         )
                     }
                     is Screen.AddConference -> {
@@ -278,7 +283,8 @@ fun App() {
                         AdminDashboardScreen(
                             confId = screen.confId, // Use 'screen' directly
                             repository = repository,
-                            onBack = { currentScreen = Screen.Welcome }
+                            onBack = { currentScreen = Screen.Profile },
+                            Turquoise = Turquoise
                         )
                     }
                 }
@@ -363,7 +369,7 @@ fun WelcomeScreen(
                 )
             ) {
                 Text(
-                    text = "Get Started",
+                    text = "Join Conference",
                     color = Color.White,
                     fontSize = 18.sp,
                     fontWeight = FontWeight.Bold
@@ -396,62 +402,3 @@ fun WelcomeScreen(
     }
 }
 
-@Composable
-fun JoinConferenceScreen(
-    onConferenceJoined: (String) -> Unit,
-    NavyBlue: Color,
-    Turquoise: Color,
-    Silver: Color
-) {
-    var confCode by remember { mutableStateOf("") }
-
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(NavyBlue)
-            .padding(24.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
-    ) {
-        Text(
-            text = "Enter Access Code",
-            style = MaterialTheme.typography.headlineSmall,
-            color = Turquoise
-        )
-        Spacer(modifier = Modifier.height(8.dp))
-        Text(
-            text = "Enter the Event Code Provided by the Organizer",
-            color = Silver,
-            textAlign = TextAlign.Center
-        )
-        Spacer(modifier = Modifier.height(16.dp))
-
-        OutlinedTextField(
-            value = confCode,
-            onValueChange = { confCode = it },
-            modifier = Modifier.fillMaxWidth(),
-            singleLine = true,
-            label = { Text("Code") },
-            colors = OutlinedTextFieldDefaults.colors(
-                focusedTextColor = Color.White,
-                unfocusedTextColor = Color.White,
-                focusedLabelColor = Turquoise,
-                unfocusedLabelColor = Silver,
-                focusedBorderColor = Turquoise,
-                unfocusedBorderColor = Silver,
-                cursorColor = Turquoise,
-                focusedContainerColor = Color.Transparent,
-                unfocusedContainerColor = Color.Transparent
-            )
-        )
-        Spacer(modifier = Modifier.height(16.dp))
-        Button(
-            onClick = { if (confCode.isNotBlank()) onConferenceJoined(confCode.trim()) },
-            colors = ButtonDefaults.buttonColors(containerColor = Turquoise),
-            modifier = Modifier.fillMaxWidth().height(50.dp),
-            shape = RoundedCornerShape(12.dp)
-        ) {
-            Text("Join Conference", color = NavyBlue, fontWeight = FontWeight.Bold)
-        }
-    }
-}
