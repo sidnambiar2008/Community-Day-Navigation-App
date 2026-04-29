@@ -193,6 +193,7 @@ fun LoginScreen(
                     TextButton(
                         onClick = {
                             if (email.isBlank()) {
+                                successMessage = null
                                 errorMessage = "Please enter your email first."
                             } else {
                                 scope.launch {
@@ -203,8 +204,9 @@ fun LoginScreen(
                                         successMessage = "Reset email sent! Check your inbox."
                                         errorMessage = null
                                     } else {
-                                        errorMessage = result.exceptionOrNull()?.message
-                                            ?: "Failed to send reset email."
+                                        val rawError = result.exceptionOrNull()?.message
+                                        errorMessage = mapFirebaseError(rawError)
+                                        successMessage = null
                                     }
                                 }
                             }
@@ -247,8 +249,8 @@ fun LoginScreen(
                                 if (result.isSuccess) {
                                     onLoginSuccess()
                                 } else {
-                                    errorMessage =
-                                        result.exceptionOrNull()?.message ?: "Unknown Error"
+                                    val rawError = result.exceptionOrNull()?.message
+                                    errorMessage = mapFirebaseError(rawError)
                                 }
                             } catch (e: Exception) {
                                 errorMessage = e.message
@@ -278,5 +280,22 @@ fun LoginScreen(
                 }
             }
         }
+    }
+}
+
+fun mapFirebaseError(message: String?): String {
+    val error = message ?: ""
+    return when {
+        error.contains("invalid-credential") || error.contains("wrong-password") ->
+            "Invalid email or password. Please try again."
+        error.contains("user-not-found") ->
+            "No account found with this email."
+        error.contains("network-request-failed") ->
+            "Connection error. Check your internet."
+        error.contains("too-many-requests") ->
+            "Too many failed attempts. Try again later."
+        error.contains("invalid-email") ->
+            "Please enter a valid email address."
+        else -> "An unexpected error occurred. Please try again."
     }
 }

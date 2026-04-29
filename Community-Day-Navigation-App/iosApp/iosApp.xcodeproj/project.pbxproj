@@ -191,7 +191,7 @@
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_ASSET_PATHS = "\"iosApp/Preview Content\"";
-				DEVELOPMENT_TEAM = 29YQ5AZ7YM;
+				DEVELOPMENT_TEAM = Y2Z64PVHAT;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = iosApp/Info.plist;
@@ -208,7 +208,7 @@
 					"@executable_path/Frameworks",
 				);
 				"OTHER_LDFLAGS[arch=*]" = "-Objc";
-				PRODUCT_BUNDLE_IDENTIFIER = org.communityday.navigation.events.CommunityDayNavigationApp;
+				PRODUCT_BUNDLE_IDENTIFIER = org.events.usc.ExpoPath;
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
@@ -224,7 +224,7 @@
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_ASSET_PATHS = "\"iosApp/Preview Content\"";
-				DEVELOPMENT_TEAM = 29YQ5AZ7YM;
+				DEVELOPMENT_TEAM = Y2Z64PVHAT;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = iosApp/Info.plist;
@@ -241,7 +241,7 @@
 					"@executable_path/Frameworks",
 				);
 				"OTHER_LDFLAGS[arch=*]" = "-Objc";
-				PRODUCT_BUNDLE_IDENTIFIER = org.communityday.navigation.events.CommunityDayNavigationApp;
+				PRODUCT_BUNDLE_IDENTIFIER = org.events.usc.ExpoPath;
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
