@@ -142,6 +142,8 @@ fun EventSearchScreen(
 @Composable
 fun ConferenceResultRow(conference: Conference, onClick: () -> Unit) {
     val Silver = Color(0xFFC0C0C0)
+    val Turquoise = Color(0xFF40E0D0)
+
     Card(
         modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp).clickable { onClick() },
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp), // Material 3 syntax
@@ -167,13 +169,14 @@ fun ConferenceResultRow(conference: Conference, onClick: () -> Unit) {
                 Icon(
                     imageVector = vectorResource(Res.drawable.ic_lock),
                     contentDescription = "Private",
-                    tint = Color.Gray,
+                    tint = Color.Yellow.copy(alpha = 0.7f),
                     modifier = Modifier.padding(horizontal = 8.dp)
                 )
             }
             Icon(
                 imageVector = vectorResource(Res.drawable.ic_rightarrow),
-                contentDescription = "Join"
+                contentDescription = "Join",
+                tint = Turquoise
             )
         }
     }

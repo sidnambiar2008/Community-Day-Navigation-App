@@ -100,7 +100,7 @@ fun AdminDashboardScreen(
                 }
 
                 // 2. EVENTS SECTION
-                item { Text("Events", style = MaterialTheme.typography.titleLarge) }
+                item { Text("Events", style = MaterialTheme.typography.titleLarge, color = Color.White) }
 
                 if (events.isEmpty()) {
                     item { Text("No events added yet.", color = Color.Gray) }
@@ -118,7 +118,7 @@ fun AdminDashboardScreen(
                 // 3. BOOTHS SECTION
                 item {
                     Spacer(Modifier.height(16.dp))
-                    Text("Booths", style = MaterialTheme.typography.titleLarge)
+                    Text("Booths", style = MaterialTheme.typography.titleLarge, color = Color.White)
                 }
 
                 if (booths.isEmpty()) {

@@ -14,6 +14,8 @@ data class Conference(
     val organization: String = "",
     val description: String = "",
     val isPublished: Boolean = false,
-    val ownerId: String = ""
+    val ownerId: String = "",
+    val dateMillis: Long = 0L,
+    val dateString: String = ""
 )
 

@@ -152,7 +152,9 @@ class EventRepository {
                 ownerId = user.uid, // Must match request.auth.uid in rules
                 isPublished = false,     // Starts as a draft for "Nonsense" protection
                 joinCode = conference.joinCode,
-                objectID = conference.joinCode
+                objectID = conference.joinCode,
+                isPublic = conference.isPublic,
+                dateString = conference.dateString
             )
 
             firestore.collection("conferences")

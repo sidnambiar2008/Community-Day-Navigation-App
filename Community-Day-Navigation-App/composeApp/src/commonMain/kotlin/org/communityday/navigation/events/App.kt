@@ -117,7 +117,7 @@ fun BottomNavigationBar(
         NavigationBarItem(
             selected = currentScreen is Screen.ScheduleScreen,
             onClick = { onTabSelected(Screen.ScheduleScreen) },
-            label = { Text("My Schedule", textAlign = TextAlign.Center) },
+            label = { Text("My Events", textAlign = TextAlign.Center) },
             icon = { Icon(
                 painter = painterResource(Res.drawable.ic_schedule),
                 contentDescription = null,

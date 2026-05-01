@@ -66,7 +66,7 @@ fun AddScheduleScreen(
 
     Column(modifier = Modifier.fillMaxSize().background(NavyBlue).padding(16.dp)) {
         Text(
-            text = "My Schedule",
+            text = "My Events",
             color = Silver,
             fontWeight = FontWeight.Bold,
             style = MaterialTheme.typography.headlineMedium
@@ -153,7 +153,7 @@ fun ScheduleCard(
             IconButton(onClick = onRemove) {
                 Icon(
                     imageVector = vectorResource(Res.drawable.ic_delete),
-                    contentDescription = "Back",
+                    contentDescription = "Remove from Schedule",
                     tint = Silver
                 )
             }

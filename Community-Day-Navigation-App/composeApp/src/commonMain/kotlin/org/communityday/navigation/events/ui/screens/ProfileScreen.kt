@@ -112,7 +112,7 @@ fun ProfileScreen(
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class) // 👈 Add this line
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ManageMyConferencesScreen(
     repository: EventRepository,

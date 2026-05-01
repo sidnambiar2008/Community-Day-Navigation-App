@@ -303,8 +303,6 @@ private fun EventDetailsGrid(
                     textColor = Silver
                 )
             }
-
-
         }
     }
 }
