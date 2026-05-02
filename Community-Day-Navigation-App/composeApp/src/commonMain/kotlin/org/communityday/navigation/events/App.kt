@@ -4,6 +4,7 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -28,7 +29,9 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import communitydaynavigationapp.composeapp.generated.resources.Res
@@ -193,6 +196,7 @@ fun App(locationProvider: LocationProvider) {
             // If they are in a Detail screen or another tab, send them back to the Event List
          //   currentScreen = Screen.EventList
        // }
+        val focusManager = LocalFocusManager.current
         Scaffold(
             containerColor = NavyBlue,
             bottomBar = {
@@ -202,6 +206,11 @@ fun App(locationProvider: LocationProvider) {
                         onTabSelected = { selectedScreen: Screen -> currentScreen = selectedScreen }
                     )
                 }
+            },
+            modifier = Modifier.pointerInput(Unit) {
+                detectTapGestures(onTap = {
+                    focusManager.clearFocus()
+                })
             }
 
         ) { paddingValues ->
