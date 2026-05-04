@@ -46,7 +46,7 @@ fun BoothListScreen(
             isLoading = false}
     }
 
-    Column(modifier = modifier.fillMaxSize().background(NavyBlue).padding(16.dp))
+    Column(modifier = modifier.fillMaxSize().background(NavyBlue).padding(16.dp).padding(top = 16.dp))
     {
         Text("Exhibitors", color = Silver, fontSize = 24.sp, fontWeight = FontWeight.Bold)
         Spacer(modifier = Modifier.height(16.dp))

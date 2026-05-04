@@ -5,6 +5,8 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -13,14 +15,24 @@ import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import communitydaynavigationapp.composeapp.generated.resources.Res
+import communitydaynavigationapp.composeapp.generated.resources.ic_flag
 import org.communityday.navigation.events.data.Booth
 import org.communityday.navigation.events.mapDirectory.openMap
+import org.jetbrains.compose.resources.vectorResource
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
+import kotlinx.coroutines.launch
+import org.communityday.navigation.events.data.EventRepository
 
 @Composable
 fun BoothDetailScreen(
     booth: Booth,
     conferenceAddress: String, // Add this parameter
-    onBackClick: () -> Unit
+    onBackClick: () -> Unit,
+    confId: String,
+    repository: EventRepository
 ) {
     val context: Any? = null
     val NavyBlue = Color(0xFF000033)
@@ -28,6 +40,9 @@ fun BoothDetailScreen(
     val Turquoise = Color(0xFF40E0D0)
     val CardNavy = Color(0xFF1A1A4D)
     val focusManager = LocalFocusManager.current // 1. Add this
+    var showSafetyDialog by remember { mutableStateOf(false) }
+    val uriHandler = androidx.compose.ui.platform.LocalUriHandler.current
+    val scope = rememberCoroutineScope()
 
 
     Column(
@@ -51,15 +66,22 @@ fun BoothDetailScreen(
         }
 
         Spacer(modifier = Modifier.height(24.dp))
-
-        // --- Header Section ---
-        Text(
-            text = booth.name,
-            color = Color.White,
-            fontSize = 32.sp,
-            fontWeight = FontWeight.Bold,
-            lineHeight = 38.sp
-        )
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            // --- Header Section ---
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = booth.name,
+                    color = Color.White,
+                    fontSize = 32.sp,
+                    fontWeight = FontWeight.Bold,
+                    lineHeight = 38.sp
+                )
+            }
+        }
 
         Text(
             text = booth.organization,
@@ -135,6 +157,72 @@ fun BoothDetailScreen(
                     color = Silver,
                     fontSize = 14.sp,
                     modifier = Modifier.align(Alignment.CenterHorizontally)
+                )
+            }
+
+            Spacer(modifier = Modifier.height(24.dp)) // Give it some space from the map info
+            IconButton(
+                onClick = { showSafetyDialog = true },
+                modifier = Modifier.align(Alignment.CenterHorizontally)
+            ) {
+                Icon(
+                    imageVector = vectorResource(Res.drawable.ic_flag),
+                    contentDescription = "Safety Options",
+                    // Using a muted alpha makes the icon look high-end rather than like an error
+                    tint = Color(0xFFCF6679),
+                    modifier = Modifier.size(28.dp) // Slightly smaller for a "footer" feel
+                )
+            }
+            Text(
+                text = "Report Content",
+                color = Color(0xFFCF6679),
+                fontSize = 10.sp, // Small and clean
+                fontWeight = FontWeight.Medium
+            )
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            if (showSafetyDialog) {
+                AlertDialog(
+                    onDismissRequest = { showSafetyDialog = false },
+                    containerColor = Color(0xFF1A1A4D),
+                    title = {
+                        Text("Safety Options", color = Color.White, fontWeight = FontWeight.Bold)
+                    },
+                    text = {
+                        Text(
+                            "Would you like to report this content for review, or hide this entire conference from your app?",
+                            color = Silver
+                        )
+                    },
+                    confirmButton = {
+                        // ACTION 1: REPORT
+                        TextButton(onClick = {
+                            showSafetyDialog = false
+                            uriHandler.openUri("https://docs.google.com/forms/...")
+                        }) {
+                            Text("Report", color = Turquoise)
+                        }
+                    },
+                    dismissButton = {
+                        Row {
+                            // ACTION 2: CANCEL (The "Oops" button)
+                            TextButton(onClick = { showSafetyDialog = false }) {
+                                Text("Cancel", color = Silver)
+                            }
+
+                            // ACTION 3: HIDE (The "Nuclear" button)
+                            TextButton(onClick = {
+                                showSafetyDialog = false
+                                scope.launch {
+                                    repository.hideConference(confId)
+                                    onBackClick()
+                                }
+                            }) {
+                                Text("Hide Conference", color = Color(0xFFCF6679))
+                            }
+                        }
+                    }
                 )
             }
         }

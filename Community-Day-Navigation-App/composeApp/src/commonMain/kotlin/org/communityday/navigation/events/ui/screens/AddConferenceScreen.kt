@@ -11,9 +11,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import communitydaynavigationapp.composeapp.generated.resources.Res
 import communitydaynavigationapp.composeapp.generated.resources.ic_daterange
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.launch
 import kotlinx.datetime.toLocalDateTime
 import org.communityday.navigation.events.data.Conference // Import your Conference model
@@ -26,8 +28,10 @@ import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
 import kotlinx.datetime.LocalDateTime
 import org.communityday.navigation.events.data.AuthRepository
+import kotlinx.coroutines.flow.firstOrNull
+import kotlinx.coroutines.flow.take
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalTime::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalTime::class, ExperimentalCoroutinesApi::class)
 @Composable
 fun AddConferenceScreen(
     repository: EventRepository,
@@ -46,6 +50,9 @@ fun AddConferenceScreen(
     val scope = rememberCoroutineScope()
     var isLoading by remember { mutableStateOf(false) }
     var showDatePicker by remember { mutableStateOf(false) }
+    val myConferences by repository.getManagedConferencesStream().collectAsState(initial = emptyList())
+    var feedbackMessage by remember { mutableStateOf<String?>(null) }
+    var isSuccess by remember { mutableStateOf(false) }
 
     // Date Formatter Helper (Simple for demo)
     val dateText = selectedDateMillis?.let { millis ->
@@ -159,42 +166,82 @@ fun AddConferenceScreen(
         if (isLoading) {
             CircularProgressIndicator(color = Turquoise)
         } else {
-            if (showError) {
+            // Display specific error/feedback messages if they exist
+            feedbackMessage?.let {
                 Text(
-                    text = "Please fill in all fields and select a date.",
+                    text = it,
                     color = Color(0xFFFF6B6B),
-                    style = MaterialTheme.typography.bodySmall,
+                    style = MaterialTheme.typography.bodyMedium,
+                    textAlign = TextAlign.Center,
+                    fontWeight = FontWeight.Bold,
                     modifier = Modifier.padding(bottom = 8.dp)
                 )
             }
+
             Button(
                 onClick = {
                     if (name.isNotBlank() && confId.isNotBlank() && selectedDateMillis != null && address.isNotBlank()) {
                         scope.launch {
                             isLoading = true
+                            feedbackMessage = null // Clear old messages
+                            showError = false
 
+                            val today = kotlinx.datetime.Clock.System.now()
+                                .toLocalDateTime(kotlinx.datetime.TimeZone.currentSystemDefault())
+                                .date.toString()
+
+                            // 1. Check Daily Limit (Changed to 10 based on your code update)
+                            val createdToday = myConferences.count { it.dateCreated == today }
+
+                            if (createdToday >= 10) {
+                                isLoading = false
+                                feedbackMessage = "Daily limit reached (10/10). Try again tomorrow!"
+                                return@launch
+                            }
+
+                            // 2. Check for Duplicate ID
+                            val normalizedId = confId.trim().uppercase()
+
+// Use take(1) to tell the Flow to stop after the first result arrives
+                            val existing = repository.getConferenceById(normalizedId)
+                                .take(1)
+                                .firstOrNull()
+
+                            if (existing != null) {
+                                isLoading = false
+                                feedbackMessage = "This ID/Code is already taken. Try another."
+                                return@launch
+                            }
+
+                            // 3. Format Date
                             val isoDateString = selectedDateMillis?.let { millis ->
                                 val instant = Instant.fromEpochMilliseconds(millis)
                                 val localDateTime = instant.toLocalDateTime(TimeZone.UTC)
-
                                 localDateTime.date.toString()
                             } ?: ""
 
-                            // Pass the new fields to your model
+                            // 4. Create Conference
                             val newConf = Conference(
-                                joinCode = confId,
+                                joinCode = normalizedId,
                                 name = name,
                                 isPublic = isPublic,
                                 dateString = isoDateString,
-                                address = address
+                                address = address,
+                                dateCreated = today
                             )
+
                             val result = repository.createConference(newConf)
                             isLoading = false
-                            if (result.isSuccess) onConferenceCreated(confId)
+
+                            if (result.isSuccess) {
+                                onConferenceCreated(newConf.joinCode)
+                            } else {
+                                feedbackMessage = "Server error. Please check your connection."
+                            }
                         }
-                    }
-                    else{
+                    } else {
                         showError = true
+                        feedbackMessage = "Please fill in all fields and select a date."
                     }
                 },
                 modifier = Modifier.fillMaxWidth().height(50.dp),

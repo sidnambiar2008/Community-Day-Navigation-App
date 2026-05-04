@@ -168,7 +168,7 @@ fun App(locationProvider: LocationProvider) {
     val repository = remember { EventRepository() }
     val authRepo = remember { AuthRepository() }
     val conferenceSearcher = remember { ConferenceSearcher() }
-    val searchViewModel = remember { SearchViewModel(conferenceSearcher) }
+    val searchViewModel = remember { SearchViewModel(conferenceSearcher, repository) }
     var pendingCode by remember { mutableStateOf("") }
     val isAttendeeModeActive = activeCode.trim().isNotEmpty()
     val scope = rememberCoroutineScope()
@@ -264,7 +264,8 @@ fun App(locationProvider: LocationProvider) {
                         onEventClick = { event -> currentScreen = Screen.EventDetail(event, activeCode) },
                         onSwitchCode = {
                             isJoined = false
-                            currentScreen = Screen.Welcome
+                            activeCode = "" // Clear the code so they start fresh
+                            currentScreen = Screen.SearchConference
                         }
                     )
 
@@ -275,11 +276,17 @@ fun App(locationProvider: LocationProvider) {
 
                     is Screen.BoothDetail -> {
                         val booth = (currentScreen as Screen.BoothDetail).booth
+
+                        // Collect the conference data if you still need the address for the map
                         val conference by repository.getConferenceById(activeCode).collectAsState(null)
+
                         BoothDetailScreen(
+                            confId = activeCode,             // Pass the active conference ID
+                            repository = repository,         // Pass the repository for the "Hide" logic
                             booth = booth,
                             conferenceAddress = conference?.address ?: "",
-                            onBackClick = { currentScreen = Screen.BoothList })
+                            onBackClick = { currentScreen = Screen.BoothList }
+                        )
                     }
 
                     is Screen.Map -> {
@@ -413,7 +420,7 @@ fun App(locationProvider: LocationProvider) {
                     Box(
                         modifier = Modifier
                             .align(Alignment.TopEnd)
-                            .padding(end = 16.dp, top = 8.dp)
+                            .padding(end = 16.dp, top = 4.dp)
                     ) {
                         Row(
                             horizontalArrangement = Arrangement.spacedBy(16.dp), // Spaces the two buttons apart
@@ -446,10 +453,6 @@ fun App(locationProvider: LocationProvider) {
                             // --- Change Event Button Group ---
                             Column(
                                 horizontalAlignment = Alignment.CenterHorizontally,
-                                modifier = Modifier.clickable {
-                                    // Change this to whatever screen lets them pick a new code
-                                    currentScreen = Screen.JoinConference
-                                }
                             ) {
                                 IconButton(
                                     onClick = { currentScreen = Screen.SearchConference },

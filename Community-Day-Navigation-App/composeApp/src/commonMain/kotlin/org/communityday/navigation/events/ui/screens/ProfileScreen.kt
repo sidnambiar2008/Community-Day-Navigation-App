@@ -21,6 +21,7 @@ import communitydaynavigationapp.composeapp.generated.resources.Res
 import communitydaynavigationapp.composeapp.generated.resources.ic_back_arrow
 import communitydaynavigationapp.composeapp.generated.resources.ic_edit
 import communitydaynavigationapp.composeapp.generated.resources.ic_manageaccount
+import communitydaynavigationapp.composeapp.generated.resources.ic_person
 import dev.gitlive.firebase.Firebase
 import dev.gitlive.firebase.auth.auth
 import kotlinx.coroutines.launch
@@ -44,6 +45,7 @@ fun ProfileScreen(
     val NavyBlue = Color(0xFF000033)
     val Silver = Color(0xFFC0C0C0)
     val scope = rememberCoroutineScope()
+    val user by authRepository.currentUser.collectAsState(initial = null)
 
     Column(modifier = Modifier.fillMaxSize().background(NavyBlue).padding(16.dp)) {
         Text("My Account", style = MaterialTheme.typography.headlineMedium, color = Color.White)
@@ -74,16 +76,14 @@ fun ProfileScreen(
 
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
-                        text = "Manage My Conferences",
+                        text = "Manage My Events",
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
-                        // CHANGED: Use Turquoise or White instead of Black
                         color = Turquoise
                     )
                     Text(
                         text = "${myConferences.size} conference(s) created",
                         style = MaterialTheme.typography.bodySmall,
-                        // CHANGED: Use a bright Silver with 80% opacity so it's crisp but secondary
                         color = Silver.copy(alpha = 0.8f)
                     )
                 }
@@ -93,22 +93,48 @@ fun ProfileScreen(
             }
         }
 
-        Spacer(modifier = Modifier.weight(1f))
+        Spacer(modifier = Modifier.height(24.dp))
+        if (user != null && user?.isAnonymous == false) {
+            Surface(
+                onClick = {
+                    scope.launch {
+                        authRepository.performSignOut()
+                        onBackClick()
+                    }
+                },
+                shape = RoundedCornerShape(12.dp),
+                color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.2f)
+            ) {
+                Row(
+                    modifier = Modifier.fillMaxWidth().padding(20.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    // Using a person or logout-style icon
+                    Icon(
+                        imageVector = vectorResource(Res.drawable.ic_person),
+                        contentDescription = null,
+                        tint = Color.Red.copy(alpha = 0.7f),
+                        modifier = Modifier.size(24.dp)
+                    )
 
-        // Optional Logout at bottom
-        Button(
-            onClick = { scope.launch {
-                authRepository.performSignOut()
-                // Navigate the user back to the Welcome/Login screen
-                onBackClick()
-            } },
-            modifier = Modifier.align(Alignment.CenterHorizontally),
-            colors = ButtonDefaults.buttonColors(
-                containerColor = Color.Gray.copy(alpha = 0.5f),
+                    Spacer(modifier = Modifier.width(16.dp))
 
-            )
-        ) {
-            Text("Log Out", color = Color.Red, fontWeight = FontWeight.Bold)
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = "Log Out",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = Color.Red.copy(alpha = 0.7f)
+                        )
+                        // 3. Display the current email
+                        Text(
+                            text = "Signed in as: ${user?.email ?: "Unknown"}",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = Silver.copy(alpha = 0.8f)
+                        )
+                    }
+                }
+            }
         }
     }
 }
@@ -132,7 +158,7 @@ fun ManageMyConferencesScreen(
     Scaffold(containerColor = NavyBlue,
         topBar = {
             TopAppBar(
-                title = { Text("Manage My Conferences", color = Color.White) },
+                title = { Text("Manage My Events", color = Color.White) },
 
                 navigationIcon = {
                     IconButton(onClick = onBack) {

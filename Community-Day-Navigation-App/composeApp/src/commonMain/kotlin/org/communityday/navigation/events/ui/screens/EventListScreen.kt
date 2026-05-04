@@ -31,6 +31,7 @@ import communitydaynavigationapp.composeapp.generated.resources.ic_person
 import communitydaynavigationapp.composeapp.generated.resources.ic_schedule
 import communitydaynavigationapp.composeapp.generated.resources.logo_main
 import kotlinx.coroutines.flow.catch
+import org.communityday.navigation.events.data.Conference
 import org.communityday.navigation.events.data.EventRepository
 import org.jetbrains.compose.resources.painterResource
 
@@ -50,32 +51,46 @@ fun EventListScreen(
     var events by remember { mutableStateOf<List<Event>>(emptyList()) }
     var isLoading by remember { mutableStateOf(false) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
+    var conference by remember { mutableStateOf<Conference?>(null) }
 
     val repository = remember { EventRepository() }
+    val hiddenIds by repository.getHiddenIds().collectAsState(initial = emptySet())
+
+    LaunchedEffect(hiddenIds) {
+        if (confCode in hiddenIds) {
+            onSwitchCode() // Navigate back to Search/Home
+        }
+    }
 
     LaunchedEffect(confCode) {
-        // This MUST use the 'confCode' from the function parameters
-        if (confCode.isBlank()) {
-            println("DEBUG: confCode is blank, skipping fetch")
-            return@LaunchedEffect
-        }
+        val cleanCode = confCode.trim().uppercase() // Normalize here!
 
+        if (cleanCode.isBlank()) return@LaunchedEffect
+        repository.getConferenceById(confCode).collect {
+            conference = it
+        }
+    }
+
+    // 2. DATA FETCH: Events List (Runs independently)
+    LaunchedEffect(confCode) {
+        if (confCode.isBlank()) return@LaunchedEffect
         isLoading = true
         errorMessage = null
 
-        println("DEBUG: Starting fetch for code: $confCode")
-
         repository.getEventsStream(confCode)
             .catch { error ->
-                println("DEBUG: Fetch failed: ${error.message}")
                 errorMessage = "Invalid Code or Connection Error"
                 isLoading = false
             }
             .collect { updatedEvents ->
-                println("DEBUG: Received ${updatedEvents.size} events")
+                println("DEBUG: Received ${updatedEvents.size} events") // ADD THIS
                 events = updatedEvents
                 isLoading = false
             }
+    }
+    if (confCode in hiddenIds) {
+        Box(Modifier.fillMaxSize().background(NavyBlue))
+        return
     }
 
     Column(
@@ -90,26 +105,28 @@ fun EventListScreen(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            Column {
-                Text("Events", color = Silver, fontSize = 24.sp, fontWeight = FontWeight.Bold)
-                Text("Code: $confCode", color = Turquoise, fontSize = 12.sp)
-            }
-            /*
-            IconButton(
-                onClick = onSwitchCode, // This triggers the lambda in App.kt
-                modifier = Modifier.size(48.dp)
-            ) {
-                Icon(
-                    // Use ic_home if you've added it to commonMain/composeResources/drawable
-                    // Or use the logo_main if you want the app logo to act as home
-                    painter = painterResource(Res.drawable.ic_home),
-                    contentDescription = "Home",
-                    tint = Turquoise, // Match your theme color
-                    modifier = Modifier.size(32.dp)
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    // Use the name from Firebase, fallback to the code if loading
+                    text = conference?.name ?: "Loading Conference...",
+                    color = Silver,
+                    fontSize = 22.sp,
+                    fontWeight = FontWeight.Bold,
+                    lineHeight = 28.sp,
+                    maxLines = 3, // Allows it to wrap onto multiple lines
+                    overflow = TextOverflow.Ellipsis,
+                    // This modifier helps control the "23 characters" feel by
+                    // limiting the width relative to the screen.
+                    modifier = Modifier.fillMaxWidth(0.85f)
+                )
+                Text(
+                    text = "Join Code: $confCode (Change)",
+                    color = Turquoise,
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.Medium,
+                    modifier = Modifier.clickable { onSwitchCode() }
                 )
             }
-            */
-
         }
 
         // 2. Error Message
@@ -258,7 +275,8 @@ private fun EventCard(
                     Text(
                         text = event.location,
                         color = Silver.copy(alpha = 0.9f),
-                        fontSize = 12.sp
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.Bold
                     )
                 }
             }

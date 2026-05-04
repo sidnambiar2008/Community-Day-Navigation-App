@@ -7,44 +7,77 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
-// Inherit from ViewModel for better lifecycle management
-class SearchViewModel(private val searcher: ConferenceSearcher) : ViewModel() {
+class SearchViewModel(
+    private val searcher: ConferenceSearcher,
+    private val repository: EventRepository // 1. Inject the repo
+) : ViewModel() {
 
     var query by mutableStateOf("")
-        private set // Allow reading but only allow changing via onQueryChange
+        private set
 
+    // This is the "Master List" from Algolia
+    private var rawResults = emptyList<Conference>()
+
+    // This is the "Safe List" for the UI
     var results by mutableStateOf<List<Conference>>(emptyList())
         private set
 
     var isSearching by mutableStateOf(false)
         private set
 
+    // 2. Convert the Flow of hidden IDs into a State object the ViewModel can use
+    private val hiddenIds = repository.getHiddenIds()
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptySet())
+
     private var searchJob: Job? = null
+
     init {
-        // Call the search function with an empty string to get everything
+        // Start by showing all public conferences
         onQueryChange("")
+
+        // 3. Listen for changes in the "Hidden" list
+        viewModelScope.launch {
+            delay(500)
+            hiddenIds.collect { currentHiddenSet ->
+                applyFilter(currentHiddenSet)
+            }
+        }
     }
+
     fun onQueryChange(newQuery: String) {
         query = newQuery
         searchJob?.cancel()
 
         searchJob = viewModelScope.launch {
-            // Only delay if the user is actively typing a specific search
-            if (newQuery.isNotEmpty()) {
-                delay(300)
-            }
-
+            if (newQuery.isNotEmpty()) delay(300)
             isSearching = true
             try {
-                // An empty string query returns all (or top) results in Algolia
-                results = searcher.search(newQuery).sortedBy { it.name }
+                // Get fresh results from the searcher
+                rawResults = searcher.search(newQuery)
+                // Filter them immediately against our blacklist
+                applyFilter(hiddenIds.value)
             } catch (e: Exception) {
                 results = emptyList()
             } finally {
                 isSearching = false
             }
         }
+    }
+
+    // 4. A function to add a conference to the blacklist
+    fun hideConference(confId: String) {
+        viewModelScope.launch {
+            repository.hideConference(confId)
+            // The 'collect' in init will automatically call applyFilter when this finishes
+        }
+    }
+
+    // The logic that keeps "Nonsense" out of view
+    private fun applyFilter(blockedIds: Set<String>) {
+        results = rawResults.filter { it.joinCode !in blockedIds }.sortedBy { it.name }
     }
 }

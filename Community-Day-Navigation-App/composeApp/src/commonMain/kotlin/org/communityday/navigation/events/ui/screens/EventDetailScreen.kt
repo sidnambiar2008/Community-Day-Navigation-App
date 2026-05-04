@@ -34,6 +34,8 @@ import kotlinx.coroutines.launch
 import org.communityday.navigation.events.data.Conference
 import org.communityday.navigation.events.data.EventRepository
 import org.communityday.navigation.events.notifications.NotificationScheduler
+import androidx.compose.foundation.text.selection.SelectionContainer
+import communitydaynavigationapp.composeapp.generated.resources.ic_flag
 
 @Composable
 fun EventDetailScreen(
@@ -59,6 +61,8 @@ fun EventDetailScreen(
     val registeredIds by repository.getRegisteredEventIds().collectAsState(emptySet())
     val isUserRegistered = registeredIds.contains(event.id)
     val focusManager = LocalFocusManager.current // 1. Add this
+    var showSafetyDialog by remember { mutableStateOf(false) }
+    val uriHandler = androidx.compose.ui.platform.LocalUriHandler.current
 
     Column(
         modifier = modifier
@@ -70,12 +74,13 @@ fun EventDetailScreen(
                     focusManager.clearFocus()
                 })
             }
-            .padding(16.dp)
+            .padding(vertical = 16.dp, horizontal = 16.dp)
+            .padding(bottom = 8.dp)
 
     ) {
         // Header with back button
         Row(
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             IconButton(onClick = onBackClick) {
@@ -93,12 +98,11 @@ fun EventDetailScreen(
                 fontWeight = FontWeight.Bold
             )
         }
-        
-        Spacer(modifier = Modifier.height(16.dp))
-        
         // Event Content
         LazyColumn(
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+            verticalArrangement = Arrangement.spacedBy(16.dp),
+            modifier = Modifier.fillMaxSize(),
+            contentPadding = PaddingValues(bottom = 32.dp)
         ) {
             item {
                 // Title and Category
@@ -109,17 +113,20 @@ fun EventDetailScreen(
                         containerColor = Color(0xFF1A1A4D)
                     )
                 ) {
-                    Column(
-                        modifier = Modifier.padding(16.dp)
+                    Row(
+                        modifier = Modifier.padding(16.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
                     ) {
-                        Text(
-                            text = event.title,
-                            color = Silver,
-                            fontSize = 20.sp,
-                            fontWeight = FontWeight.Bold
-                        )
-                        Spacer(modifier = Modifier.height(8.dp))
-                        CategoryBadge(event.category, NavyBlue, Silver, Turquoise, ActionOrange)
+                        SelectionContainer(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = event.title,
+                                color = Color.White,
+                                fontSize = 20.sp,
+                                fontWeight = FontWeight.Bold,
+                                lineHeight = 30.sp
+                            )
+                        }
                     }
                 }
             }
@@ -246,18 +253,70 @@ fun EventDetailScreen(
                             fontWeight = FontWeight.Bold
                         )
                     }
-
-                    // Secondary Text for exact room/spot detail
-                    if (event.location.isNotBlank()) {
-                        Text(
-                            text = "Location: ${event.location}",
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = Silver.copy(alpha = 0.7f), // Keep it readable against NavyBlue
-                            modifier = Modifier.padding(top = 8.dp)
+                    Spacer(modifier = Modifier.height(24.dp)) // Give it some space from the map info
+                    IconButton(
+                        onClick = { showSafetyDialog = true },
+                        modifier = Modifier.align(Alignment.CenterHorizontally)
+                    ) {
+                        Icon(
+                            imageVector = vectorResource(Res.drawable.ic_flag),
+                            contentDescription = "Safety Options",
+                            // Using a muted alpha makes the icon look high-end rather than like an error
+                            tint = Color(0xFFCF6679),
+                            modifier = Modifier.size(28.dp) // Slightly smaller for a "footer" feel
                         )
                     }
+                    Text(
+                        text = "Report Content",
+                        color = Color(0xFFCF6679),
+                        fontSize = 10.sp, // Small and clean
+                        fontWeight = FontWeight.Medium
+                    )
                 }
             }
+        }
+        if (showSafetyDialog) {
+            AlertDialog(
+                onDismissRequest = { showSafetyDialog = false },
+                containerColor = Color(0xFF1A1A4D),
+                title = {
+                    Text("Safety Options", color = Color.White, fontWeight = FontWeight.Bold)
+                },
+                text = {
+                    Text(
+                        "Would you like to report this content for review, or hide this entire conference from your app?",
+                        color = Silver
+                    )
+                },
+                confirmButton = {
+                    // ACTION 1: REPORT
+                    TextButton(onClick = {
+                        showSafetyDialog = false
+                        uriHandler.openUri("https://docs.google.com/forms/...")
+                    }) {
+                        Text("Report", color = Turquoise)
+                    }
+                },
+                dismissButton = {
+                    Row {
+                        // ACTION 2: CANCEL (The "Oops" button)
+                        TextButton(onClick = { showSafetyDialog = false }) {
+                            Text("Cancel", color = Silver)
+                        }
+
+                        // ACTION 3: HIDE (The "Nuclear" button)
+                        TextButton(onClick = {
+                            showSafetyDialog = false
+                            scope.launch {
+                                repository.hideConference(confId)
+                                onBackClick()
+                            }
+                        }) {
+                            Text("Hide Conference", color = Color(0xFFCF6679))
+                        }
+                    }
+                }
+            )
         }
     }
 }

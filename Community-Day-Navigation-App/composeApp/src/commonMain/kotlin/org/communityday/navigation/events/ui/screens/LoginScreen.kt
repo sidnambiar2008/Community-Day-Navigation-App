@@ -5,6 +5,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.IconButton
 import androidx.compose.material3.Button
+import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -21,7 +22,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.unit.sp
 import communitydaynavigationapp.composeapp.generated.resources.Res
 import communitydaynavigationapp.composeapp.generated.resources.ic_back_arrow
 import dev.gitlive.firebase.Firebase
@@ -96,24 +99,36 @@ fun LoginScreen(
     else {
         Scaffold(
             topBar = {
-                TopAppBar(
+                CenterAlignedTopAppBar( // The title to be centered
                     title = {
-                        Text(
-                            "Back to Home Page",
-                            color = Color.White
-                        )
-                    }, // Added white text for visibility
+                    },
                     navigationIcon = {
-                        IconButton(onClick = onBackClick) {
-                            Icon(
-                                imageVector = vectorResource(Res.drawable.ic_back_arrow),
-                                contentDescription = "Back",
-                                tint = ActionOrange
-                            )
+                        // We use a Row inside a clickable Box or TextButton to make the whole area touchable
+                        TextButton(
+                            onClick = onBackClick,
+                            contentPadding = PaddingValues(start = 8.dp) // Align it closer to the edge
+                        ) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Icon(
+                                    imageVector = vectorResource(Res.drawable.ic_back_arrow),
+                                    contentDescription = "Back",
+                                    tint = ActionOrange,
+                                    modifier = Modifier.size(20.dp) // Slightly smaller to fit text better
+                                )
+                                Spacer(modifier = Modifier.width(4.dp))
+                                Text(
+                                    text = "Back to Home",
+                                    color = ActionOrange,
+                                    fontSize = 14.sp,
+                                    fontWeight = FontWeight.Medium
+                                )
+                            }
                         }
                     },
-                    colors = TopAppBarDefaults.topAppBarColors(
-                        containerColor = NavyBlue // Match your background
+                    colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
+                        containerColor = NavyBlue
                     )
                 )
             }
@@ -332,6 +347,6 @@ fun mapFirebaseError(message: String?): String {
         error.contains("invalid-email") ->
             "Please enter a valid email address."
         error.contains("ERROR_INVALID_CREDENTIAL") -> "Invalid Username or Password"
-        else -> "An unexpected error occurred. Please try again." + error
+        else -> "An unexpected error occurred. Please try again." //+ error
     }
 }

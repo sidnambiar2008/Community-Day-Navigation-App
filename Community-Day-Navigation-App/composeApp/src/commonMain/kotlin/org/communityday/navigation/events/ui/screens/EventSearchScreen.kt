@@ -22,6 +22,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.graphics.Color
@@ -33,6 +34,13 @@ import communitydaynavigationapp.composeapp.generated.resources.ic_close
 import communitydaynavigationapp.composeapp.generated.resources.ic_lock
 import communitydaynavigationapp.composeapp.generated.resources.ic_rightarrow
 import org.jetbrains.compose.resources.vectorResource
+import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.foundation.combinedClickable
+import androidx.compose.material3.AlertDialog
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.getValue
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -46,6 +54,7 @@ fun EventSearchScreen(
     val Turquoise = Color(0xFF40E0D0)
     val Silver = Color(0xFFC0C0C0)
     val ActionOrange = Color(0xFFFF8C00)
+    var conferenceToHide by remember { mutableStateOf<Conference?>(null) }
 
     Scaffold(
         topBar = {
@@ -60,12 +69,28 @@ fun EventSearchScreen(
                     )
                 },
                 navigationIcon = {
-                    IconButton(onClick = onBackClick) {
-                        Icon(
-                            imageVector = vectorResource(Res.drawable.ic_back_arrow),
-                            contentDescription = "Back",
-                            tint = ActionOrange
-                        )
+                    // We use a Row inside a clickable Box or TextButton to make the whole area touchable
+                    TextButton(
+                        onClick = onBackClick,
+                        contentPadding = PaddingValues(start = 8.dp) // Align it closer to the edge
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(
+                                imageVector = vectorResource(Res.drawable.ic_back_arrow),
+                                contentDescription = "Back",
+                                tint = ActionOrange,
+                                modifier = Modifier.size(20.dp) // Slightly smaller to fit text better
+                            )
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text(
+                                text = "Back to Home",
+                                color = ActionOrange,
+                                fontSize = 14.sp,
+                                fontWeight = FontWeight.Medium
+                            )
+                        }
                     }
                 },
                 colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
@@ -126,26 +151,62 @@ fun EventSearchScreen(
                 }
 
                 items(viewModel.results) { conference ->
-                    ConferenceResultRow(conference) {
-                        if (conference.isPublic) {
-                            onDirectJoin(conference.joinCode)
-                        } else {
-                            onNavigateToJoinCode(conference.joinCode)
+                    ConferenceResultRow(
+                        conference = conference,
+                        onClick = {
+                            if (conference.isPublic) {
+                                onDirectJoin(conference.joinCode)
+                            } else {
+                                onNavigateToJoinCode(conference.joinCode)
+                            }
+                        },
+                        onLongClick = {
+                            // Set the conference to show the dialog
+                            conferenceToHide = conference
                         }
-                    }
+                    )
                 }
             }
+        }
+        if (conferenceToHide != null) {
+            AlertDialog(
+                onDismissRequest = { conferenceToHide = null },
+                containerColor = Color(0xFF1A1A4D),
+                title = { Text("Hide Conference?", color = Color.White) },
+                text = {
+                    Text(
+                        "Would you like to hide '${conferenceToHide?.name}'? It will no longer appear in your search results.",
+                        color = Silver
+                    )
+                },
+                confirmButton = {
+                    TextButton(onClick = {
+                        conferenceToHide?.let { viewModel.hideConference(it.joinCode) }
+                        conferenceToHide = null
+                    }) {
+                        Text("Hide", color = ActionOrange)
+                    }
+                },
+                dismissButton = {
+                    TextButton(onClick = { conferenceToHide = null }) {
+                        Text("Cancel", color = Silver)
+                    }
+                }
+            )
         }
     }
 }
 
 @Composable
-fun ConferenceResultRow(conference: Conference, onClick: () -> Unit) {
+fun ConferenceResultRow(conference: Conference, onClick: () -> Unit, onLongClick: () -> Unit) {
     val Silver = Color(0xFFC0C0C0)
     val Turquoise = Color(0xFF40E0D0)
 
     Card(
-        modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp).clickable { onClick() },
+        modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp).combinedClickable(
+            onClick = onClick,
+            onLongClick = onLongClick
+        ),
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp), // Material 3 syntax
         colors = CardDefaults.cardColors(
             containerColor = Silver.copy(alpha = 0.2f), // Only 10% brightness

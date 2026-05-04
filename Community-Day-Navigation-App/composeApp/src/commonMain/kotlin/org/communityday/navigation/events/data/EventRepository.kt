@@ -13,6 +13,7 @@ import org.communityday.navigation.events.utils.convertTimeToMinutes
 
 class EventRepository {
     private val firestore = Firebase.firestore
+    private val auth = Firebase.auth
 
     /**
      * Helper to build the dynamic path based on the Conference ID (confId)
@@ -77,6 +78,7 @@ class EventRepository {
                 emit(emptyList()) // Returns an empty list instead of crashing the UI
             }
     }
+
     @kotlinx.coroutines.ExperimentalCoroutinesApi
     fun getManagedConferencesStream(): Flow<List<Conference>> {
         // 1. Listen to the Auth state directly
@@ -116,7 +118,7 @@ class EventRepository {
                 val currentCount: Int = snapshot.get("registeredCount") ?: 0
                 val capacity: Int = snapshot.get("capacity") ?: -1
 
-                if (capacity == -1||currentCount < capacity) {
+                if (capacity == -1 || currentCount < capacity) {
                     update(eventRef, mapOf("registeredCount" to (currentCount + 1)))
                 } else {
                     throw Exception("Event is full!")
@@ -187,6 +189,7 @@ class EventRepository {
             Result.failure(e)
         }
     }
+
     suspend fun updateEvent(confId: String, event: Event): Result<Unit> {
         return try {
             getEventCollection(confId)
@@ -219,6 +222,7 @@ class EventRepository {
             Result.failure(e)
         }
     }
+
     suspend fun deleteBooth(confId: String, boothId: String): Result<Unit> {
         return try {
             getBoothCollection(confId).document(boothId).delete()
@@ -228,6 +232,7 @@ class EventRepository {
             Result.failure(e)
         }
     }
+
     /**
      * Saves an event ID to the user's private registration list
      */
@@ -239,10 +244,12 @@ class EventRepository {
                 .document(user.uid)
                 .collection("registeredEvents")
                 .document(eventId)
-                .set(mapOf(
-                    "confId" to confId,
-                    "timestamp" to FieldValue.serverTimestamp
-                ))
+                .set(
+                    mapOf(
+                        "confId" to confId,
+                        "timestamp" to FieldValue.serverTimestamp
+                    )
+                )
             Result.success(Unit)
         } catch (e: Exception) {
             println("Error saving to schedule: ${e.message}")
@@ -265,9 +272,7 @@ class EventRepository {
                     .delete()
 
                 Result.success(Unit)
-            }
-            else
-            {
+            } else {
                 Result.failure(unregisterResult.exceptionOrNull() ?: Exception("Unknown Error"))
             }
         } catch (e: Exception) {
@@ -275,6 +280,7 @@ class EventRepository {
             Result.failure(e)
         }
     }
+
     /**
      * Returns a stream of event IDs the user has registered for
      */
@@ -303,25 +309,26 @@ class EventRepository {
             null
         }
     }
+
     suspend fun unregisterFromEvent(confId: String, eventId: String): Result<Unit> {
         val eventRef = getEventCollection(confId).document(eventId)
 
         return try {
-                firestore.runTransaction {
-                    // 'it' represents the Transaction object automatically
-                    val snapshot = get(eventRef)
+            firestore.runTransaction {
+                // 'it' represents the Transaction object automatically
+                val snapshot = get(eventRef)
 
-                    // Use 'snapshot.get("field")' or 'snapshot.getLong("field")'
-                    val currentCount: Int = snapshot.get("registeredCount") ?: 0
+                // Use 'snapshot.get("field")' or 'snapshot.getLong("field")'
+                val currentCount: Int = snapshot.get("registeredCount") ?: 0
 
-                    if (currentCount > 0) {
-                        update(eventRef, mapOf("registeredCount" to (currentCount - 1)))
-                    }
+                if (currentCount > 0) {
+                    update(eventRef, mapOf("registeredCount" to (currentCount - 1)))
                 }
-                Result.success(Unit)
-            } catch (e: Exception) {
-                Result.failure(e)
             }
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
     }
 
     suspend fun forceResetEventCount(confId: String, eventId: String, newCount: Int): Result<Unit> {
@@ -353,53 +360,39 @@ class EventRepository {
         val uid = user.uid
 
         return try {
-            // 1. Clean up Conferences owned by the user
+            // 1. Clean up Conferences & Sub-collections
             val ownedConferences = firestore.collection("conferences")
                 .where { "ownerId" equalTo uid }
                 .get()
 
-            for (confDoc in ownedConferences.documents) {
-                // A. Delete Events sub-collection
-                val events = confDoc.reference.collection("events").get()
-                for (eventDoc in events.documents) {
-                    eventDoc.reference.delete()
+            ownedConferences.documents.forEach { confDoc ->
+                // Delete sub-collections first
+                val subCollections = listOf("events", "booths")
+                subCollections.forEach { sub ->
+                    val docs = confDoc.reference.collection(sub).get()
+                    docs.documents.forEach { it.reference.delete() }
                 }
-
-                // B. Delete Booths sub-collection
-                val booths = confDoc.reference.collection("booths").get()
-                for (boothDoc in booths.documents) {
-                    boothDoc.reference.delete()
-                }
-
-                // C. Delete the Conference document
                 confDoc.reference.delete()
             }
 
-            // 2. Clean up the User's private sub-collections (e.g., registeredEvents)
-            // This ensures the 'users' document is truly empty before deletion
-            val registeredEvents = firestore.collection("users")
-                .document(uid)
-                .collection("registeredEvents")
-                .get()
+            // 2. Clean up User Data
+            val userRef = firestore.collection("users").document(uid)
+            val registered = userRef.collection("registeredEvents").get()
+            registered.documents.forEach { it.reference.delete() }
+            userRef.delete()
 
-            for (regDoc in registeredEvents.documents) {
-                regDoc.reference.delete()
-            }
-
-            // 3. Delete the main User document
-            firestore.collection("users").document(uid).delete()
-
-            // 4. Finally, delete the Firebase Auth account
-            // Note: If this fails with "requires-recent-login", the catch block
-            // will handle it and return the failure to your SettingsScreen.
+            // 3. Delete from Firebase Auth
+            // If this throws 'requires-recent-login', the catch block catches it.
             user.delete()
 
             Result.success(Unit)
         } catch (e: Exception) {
-            println("Complete Deletion Error: ${e.message}")
+            // Log specifically if it's an Auth error vs a Firestore error
+            println("Deletion Error: ${e.message}")
             Result.failure(e)
         }
     }
+
     fun getConferenceById(confId: String): Flow<Conference?> {
         return firestore.collection("conferences")
             .document(confId)
@@ -416,5 +409,40 @@ class EventRepository {
                 emit(null)
             }
     }
+
+    // Add this helper property inside your EventRepository class
+    private val currentUserId: String
+        get() = Firebase.auth.currentUser?.uid ?: "anonymous_user"
+
+    // Update these two functions in your EventRepository
+    fun getHiddenIds(): Flow<Set<String>> {
+        val uid = auth.currentUser?.uid
+        if (uid == null) return flowOf(emptySet()) // Return empty if not logged in yet
+
+        return firestore.collection("users").document(uid)
+            .snapshots()
+            .map { snapshot ->
+                val list = snapshot.data<UserDoc>().hiddenConferences
+                list.toSet()
+            }
+            .catch { emit(emptySet()) } // Catch permission errors
+    }
+
+    suspend fun hideConference(confId: String) {
+        val uid = Firebase.auth.currentUser?.uid ?: return
+        val userRef = firestore.collection("users").document(uid)
+
+        try {
+            // GitLive syntax for arrayUnion
+            userRef.update("hiddenConferences" to FieldValue.arrayUnion(confId))
+        } catch (e: Exception) {
+            // If document doesn't exist, create it
+            userRef.set(mapOf("hiddenConferences" to listOf(confId)))
+        }
+    }
 }
 
+@kotlinx.serialization.Serializable
+data class UserDoc(
+    val hiddenConferences: List<String> = emptyList()
+)

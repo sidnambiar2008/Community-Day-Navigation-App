@@ -7,8 +7,10 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -20,23 +22,29 @@ import org.communityday.navigation.events.data.Booth
 import androidx.compose.runtime.*
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.text.style.TextOverflow
+import communitydaynavigationapp.composeapp.generated.resources.Res
+import communitydaynavigationapp.composeapp.generated.resources.ic_close
+import communitydaynavigationapp.composeapp.generated.resources.ic_warning
 import org.communityday.navigation.events.data.EventRepository
 import org.communityday.navigation.events.mapDirectory.openMap
+import org.jetbrains.compose.resources.vectorResource
 
 @Composable
 fun SettingsScreen(
     onDeleteAccount: () -> Unit,
     showSecurityWarning: Boolean,
     onDismissSecurityWarning: () -> Unit,
-    isDeleting: Boolean
+    isDeleting: Boolean,
+    currentUserId: String = "Anonymous"
 ) {
     val NavyBlue = Color(0xFF000033)
     val CardBlue = Color(0xFF1A1A4D)
     val Silver = Color(0xFFC0C0C0)
     val Turquoise = Color(0xFF40E0D0)
     val DangerRed = Color(0xFFCF6679)
-
+    val uriHandler = LocalUriHandler.current // Moved here to fix scope issue
     var showDeleteConfirmation by remember { mutableStateOf(false) }
+    val scrollState = rememberScrollState() // For small screens
 
 
     Box(modifier = Modifier.fillMaxSize().background(NavyBlue)) {
@@ -44,10 +52,36 @@ fun SettingsScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(24.dp)
+                .verticalScroll(scrollState)
         ) {
-            Text("App Settings", color = Color.White, fontSize = 28.sp, fontWeight = FontWeight.Bold)
+            Text("App Settings", color = Color.White, fontSize = 24.sp, fontWeight = FontWeight.Bold)
 
             Spacer(modifier = Modifier.height(32.dp))
+
+            // --- Safety & Moderation Section ---
+            SettingsSectionHeader("Safety & Moderation", Turquoise)
+            Card(
+                colors = CardDefaults.cardColors(containerColor = CardBlue),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Column(modifier = Modifier.padding(16.dp)) {
+                    Text(
+                        "Help us keep ExpoPath safe. Report inappropriate content.",
+                        color = Silver,
+                        fontSize = 12.sp,
+                        lineHeight = 18.sp
+                    )
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    // Option 1: Report a Conference
+                    SafetyLink("Report Inappropriate Conference", DangerRed) {
+                        val formUrl = "https://docs.google.com/forms/d/e/1FAIpQLSdFmVVjKJtAMHQvL-NESv7hXMxnjnmwvf0hJGWt8K7GmC6hYw/viewform?usp=sharing&ouid=100512648276679219316"
+                        uriHandler.openUri(formUrl)
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(24.dp))
 
             // --- Legal Section ---
             SettingsSectionHeader("Legal", Turquoise)
@@ -138,7 +172,7 @@ fun LegalCard(Silver: Color) {
     val uriHandler = LocalUriHandler.current // 1. Grab the handler
 
     // Replace with your actual GitHub Pages or Repo link
-    val baseUrl = "https://github.com/sidnambiar2008/Community-Day-Navigation-App/blob/main/"
+    val baseUrl = "https://sidnambiar2008.github.io/ExpoPath/"
 
     Card(
         colors = CardDefaults.cardColors(containerColor = Color(0xFF1A1A4D)),
@@ -152,19 +186,19 @@ fun LegalCard(Silver: Color) {
 
             // 2. Map the buttons to your GitHub files
             LegalLink("Privacy Policy", Turquoise) {
-                uriHandler.openUri("$baseUrl/PRIVACY.md")
+                uriHandler.openUri("$baseUrl/PRIVACY")
             }
             LegalLink("Terms of Service", Turquoise) {
-                uriHandler.openUri("$baseUrl/TERMS.md")
+                uriHandler.openUri("$baseUrl/TERMS")
             }
             LegalLink("Open Source Licenses", Turquoise) {
-                uriHandler.openUri("$baseUrl/LICENSES.md")
+                uriHandler.openUri("$baseUrl/LICENSES")
             }
 
             // 3. Contact Support (Opens the user's default email app)
             LegalLink("Contact Support", Turquoise) {
                 //uriHandler.openUri("mailto:your-email@usc.edu?subject=ExpoPath%20Support")
-                uriHandler.openUri("$baseUrl/SUPPORT.md")
+                uriHandler.openUri("$baseUrl/SUPPORT")
             }
         }
     }
@@ -181,4 +215,24 @@ fun LegalLink(text: String, color: Color, onClick: () -> Unit) {
             .clickable { onClick() }
             .padding(vertical = 4.dp)
     )
+}
+
+@Composable
+fun SafetyLink(text: String, color: Color, onClick: () -> Unit) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { onClick() }
+            .padding(vertical = 8.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Icon(
+            imageVector = vectorResource(Res.drawable.ic_warning), // Add a close icon to Res
+            contentDescription = null,
+            tint = color,
+            modifier = Modifier.size(16.dp)
+            )
+        Spacer(Modifier.width(8.dp))
+        Text(text = text, color = color, fontSize = 14.sp, fontWeight = FontWeight.Medium)
+    }
 }
