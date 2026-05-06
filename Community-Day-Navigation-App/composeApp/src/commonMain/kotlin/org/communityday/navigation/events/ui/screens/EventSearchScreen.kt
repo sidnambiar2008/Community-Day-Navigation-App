@@ -56,6 +56,7 @@ fun EventSearchScreen(
     val Turquoise = Color(0xFF40E0D0)
     val Silver = Color(0xFFC0C0C0)
     val ActionOrange = Color(0xFFFF8C00)
+
     var conferenceToHide by remember { mutableStateOf<Conference?>(null) }
 
     LaunchedEffect(Unit) {
@@ -65,13 +66,7 @@ fun EventSearchScreen(
         topBar = {
             CenterAlignedTopAppBar( // The title to be centered
                 title = {
-                  //  Text(
-                   //     text = "Find your Event",
-                    //    style = MaterialTheme.typography.titleMedium, // Adjusted style for AppBar fit
-                     //   color = Color.White,
-                      //  fontSize = 24.sp,
-                       // modifier = Modifier.offset(y = 12.dp) // Positive y moves it DOWN
-                    //)
+
                 },
                 navigationIcon = {
                     // We use a Row inside a clickable Box or TextButton to make the whole area touchable
@@ -154,6 +149,13 @@ fun EventSearchScreen(
                 }
             )
             Spacer(modifier = Modifier.height(16.dp))
+            Text(
+                text = "Hold to Hide",
+                fontSize = 10.sp,
+                color = ActionOrange.copy(alpha = 0.6f),
+                fontWeight = FontWeight.Light,
+                 modifier = Modifier.padding(start = 3.dp)
+            )
             LazyColumn(contentPadding = PaddingValues(bottom = 80.dp)) {
                 if (viewModel.results.isEmpty() && !viewModel.isSearching) {
                     item {
@@ -184,6 +186,7 @@ fun EventSearchScreen(
                 }
             }
         }
+
         if (conferenceToHide != null) {
             AlertDialog(
                 onDismissRequest = { conferenceToHide = null },
@@ -217,6 +220,7 @@ fun EventSearchScreen(
 fun ConferenceResultRow(conference: Conference, onClick: () -> Unit, onLongClick: () -> Unit) {
     val Silver = Color(0xFFC0C0C0)
     val Turquoise = Color(0xFF40E0D0)
+    val ActionOrange = Color(0xFFFF8C00)
 
     Card(
         modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp).combinedClickable(
@@ -234,11 +238,11 @@ fun ConferenceResultRow(conference: Conference, onClick: () -> Unit, onLongClick
         ) {
             Column(modifier = Modifier.weight(1f)) {
                 Text(conference.name, fontWeight = FontWeight.Bold)
-                Text(
-                    text = "Code: ${conference.joinCode}",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = Color.Gray
-                )
+               // Text(
+                //    text = "Code: ${conference.joinCode}",
+                 //   style = MaterialTheme.typography.bodySmall,
+                  //  color = Color.Gray
+                //)
             }
 
             if (!conference.isPublic) {

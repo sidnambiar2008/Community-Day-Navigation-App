@@ -285,7 +285,8 @@ fun App(locationProvider: LocationProvider) {
                             repository = repository,         // Pass the repository for the "Hide" logic
                             booth = booth,
                             conferenceAddress = conference?.address ?: "",
-                            onBackClick = { currentScreen = Screen.BoothList }
+                            onBackClick = { currentScreen = Screen.BoothList },
+                            returnToSearch = {currentScreen = Screen.SearchConference}
                         )
                     }
 
@@ -355,7 +356,8 @@ fun App(locationProvider: LocationProvider) {
                             event = event,
                             repository = repository,
                             conferenceAddress = conference?.address ?: "", // Pass the anchor!
-                            onBackClick = { currentScreen = Screen.EventList }
+                            onBackClick = { currentScreen = Screen.EventList },
+                            returnToSearch = {currentScreen = Screen.SearchConference}
                         )
                     }
 
@@ -519,7 +521,7 @@ fun WelcomeScreen(
             )
         }
 
-        Spacer(modifier = Modifier.height(32.dp))
+        Spacer(modifier = Modifier.height(24.dp))
 
         // Title
         AnimatedVisibility(showContent) {
@@ -533,7 +535,7 @@ fun WelcomeScreen(
             }
         }
 
-        Spacer(modifier = Modifier.height(48.dp))
+        Spacer(modifier = Modifier.height(24.dp))
 
         // Description
         AnimatedVisibility(showContent) {

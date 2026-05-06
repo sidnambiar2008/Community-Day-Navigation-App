@@ -35,7 +35,8 @@ fun BoothDetailScreen(
     conferenceAddress: String, // Add this parameter
     onBackClick: () -> Unit,
     confId: String,
-    repository: EventRepository
+    repository: EventRepository,
+    returnToSearch: () -> Unit
 ) {
     val context: Any? = null
     val NavyBlue = Color(0xFF000033)
@@ -245,7 +246,7 @@ fun BoothDetailScreen(
                         TextButton(
                             onClick = {
                                 showSafetyDialog = false
-                                uriHandler.openUri("https://docs.google.com/forms/...")
+                                uriHandler.openUri("https://docs.google.com/forms/d/e/1FAIpQLSdFmVVjKJtAMHQvL-NESv7hXMxnjnmwvf0hJGWt8K7GmC6hYw/viewform?usp=dialog")
                             }
                         ) {
                             // The main action button
@@ -288,7 +289,7 @@ fun BoothDetailScreen(
                                 showHideDialog = false
                                 scope.launch {
                                     repository.hideConference(confId)
-                                    onBackClick() // Send them home immediately
+                                    returnToSearch()// Send them home immediately
                                 }
                             }
                         ) {

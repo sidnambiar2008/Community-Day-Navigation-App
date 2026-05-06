@@ -60,23 +60,9 @@ fun LoginScreen(
     var isCheckingAuth by remember { mutableStateOf(true) }
     var confirmPassword by remember { mutableStateOf("") }
     var passwordVisible by remember { mutableStateOf(false) }
+    var isButtonEnabled by remember { mutableStateOf(false) }
 
-    /*
-    LaunchedEffect(Unit) {
-        // 1. Give Firebase a tiny moment to initialize the token
-        delay(500)
 
-        // 2. Check if a user exists
-        val user = Firebase.auth.currentUser
-        if (user != null) {
-            // 3. User found! Proceed to the dashboard
-            onLoginSuccess()
-        } else {
-            // 4. No user, stay on this screen and show the login fields
-            isCheckingAuth = false
-        }
-    }
-    */
     LaunchedEffect(Unit) {
         delay(500)
         val user = Firebase.auth.currentUser
@@ -345,15 +331,17 @@ fun LoginScreen(
                     modifier = Modifier.fillMaxWidth(),
                     colors = ButtonDefaults.buttonColors(
                         containerColor = ActionOrange, // Sets the background to Turquoise
-                        contentColor = Color.White   // Sets the text color (optional, but better for contrast)
+                        contentColor = ActionOrange,   // Sets the text color (optional, but better for contrast)
+                        disabledContentColor = Silver,
+                        disabledContainerColor = Silver
                     ),
-                    // Only enable if fields aren't empty AND not loading
+                    // Only enable if fields aren't empty AND not loading && password length is 6
                     enabled = !isLoading &&
-                            email.contains("@") &&
-                            email.contains(".") && // Added a check for the dot (e.g., .com)
-                            password.length >= 6 &&
-                            (!isSignUp || (confirmPassword.length >= 6 && confirmPassword == password))) {
-                    Text(if (isLoading) "Processing..." else if (isSignUp) "Sign Up" else "Login")
+                            email.isNotBlank() &&
+                            password.length >= 6 && email.contains(".") &&
+                            (!isSignUp || (confirmPassword == password)))
+                {
+                    Text(if (isLoading) "Processing..." else if (isSignUp) "Sign Up" else "Login", color = Color.Black, fontWeight = FontWeight.Bold, fontSize = 18.sp)
                 }
 
                 TextButton(

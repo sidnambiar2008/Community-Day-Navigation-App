@@ -431,8 +431,8 @@ class EventRepository {
                     .snapshots()
                     .map { snapshot ->
                         // Handle the case where the document might not exist yet
-                        val data = snapshot.data<UserDoc>()
-                        data.hiddenConferences.toSet()
+                        val data = try { snapshot.data<UserDoc>() } catch (e: Exception) { null }
+                        data?.hiddenConferences?.toSet() ?: emptySet()
                     }
             }
         }.catch { e ->

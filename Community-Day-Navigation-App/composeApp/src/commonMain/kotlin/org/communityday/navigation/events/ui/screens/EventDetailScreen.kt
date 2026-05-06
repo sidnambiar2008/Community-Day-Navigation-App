@@ -45,7 +45,8 @@ fun EventDetailScreen(
     repository: EventRepository, // Pass this in
     onBackClick: () -> Unit,
     conferenceAddress: String,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    returnToSearch: () -> Unit
 ) {
 
     val context: Any? = null
@@ -320,7 +321,7 @@ fun EventDetailScreen(
                     TextButton(
                         onClick = {
                             showSafetyDialog = false
-                            uriHandler.openUri("https://docs.google.com/forms/...")
+                            uriHandler.openUri("https://docs.google.com/forms/d/e/1FAIpQLSdFmVVjKJtAMHQvL-NESv7hXMxnjnmwvf0hJGWt8K7GmC6hYw/viewform?usp=dialog")
                         }
                     ) {
                         // The main action button
@@ -363,7 +364,7 @@ fun EventDetailScreen(
                             showHideDialog = false
                             scope.launch {
                                 repository.hideConference(confId)
-                                onBackClick() // Send them home immediately
+                                returnToSearch() // Send them home immediately
                             }
                         }
                     ) {

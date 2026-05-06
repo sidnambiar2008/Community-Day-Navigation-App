@@ -167,6 +167,12 @@ fun JoinConferenceScreen(
                         }
                     }
                 },
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = ActionOrange, // Sets the background to Turquoise
+                    contentColor = ActionOrange,   // Sets the text color (optional, but better for contrast)
+                    //disabledContentColor = Silver,
+                    //disabledContainerColor = Silver
+                ),
                 enabled = !isVerifying,
             ) {
                 if (isVerifying) {
